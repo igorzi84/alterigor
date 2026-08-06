@@ -1,21 +1,25 @@
-from dotenv import load_dotenv
-from agents import Agent, Runner, trace
 from pathlib import Path
 
+from dotenv import load_dotenv
+from fastapi import FastAPI
+
+from alterigor.api.v1.routes.chat import router as chat_router
+
 load_dotenv(override=True)
-CV_FILE = Path(__file__).resolve().parents[1] / "knowledge" / "cv.md"
 
-#agent = Agent(name="aigor", instructions = "", model="gpt-5.6-luna")
+BASE_DIR = Path(__file__).resolve().parent
+SYSTEM_PROMPT = (BASE_DIR / "prompts" / "system.md").read_text(encoding="utf-8")
+CV_TEXT = (BASE_DIR / "knowledge" / "cv.md").read_text(encoding="utf-8")
 
-#with trace("Test"):
-#    result = Runner.run(agent, "Test")
-def read_cv() -> str:
-    with CV_FILE.open("r", encoding="utf-8") as file:
-        return file.read()
 
-            
-def main():
-    print(read_cv())
+app = FastAPI(title="AlterIgor")
 
-    
-        
+app.include_router(
+    chat_router,
+    prefix="/api/v1",
+    tags=["chat"],
+)
+
+@app.get("/healthz", description="Health route")
+def healthz() -> str:
+    return "OK"
