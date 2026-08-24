@@ -1,0 +1,9 @@
+node_modules
+.next
+.vinext
+dist
+coverage
+.wrangler
+package-lock.json
+ideas.md
+content/cv.md
