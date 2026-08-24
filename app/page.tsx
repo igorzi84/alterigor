@@ -1,5 +1,6 @@
 import { profile } from '@/content/profile';
 import { site } from '@/lib/site';
+import { ChatPanel } from './components/chat-panel';
 
 const navigation = [
   ['Work', '#work'],
@@ -55,6 +56,12 @@ export default function Home() {
             Explore selected work
           </a>
           <a
+            className="rounded-full border border-cyan-300 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300 hover:text-slate-950"
+            href="#chat"
+          >
+            Talk to AlterIgor
+          </a>
+          <a
             className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
             href={profile.contact.github}
             rel="noreferrer"
@@ -89,6 +96,25 @@ export default function Home() {
             </dd>
           </div>
         </dl>
+      </section>
+
+      <section
+        className="border-t border-slate-800 bg-slate-950/60 px-6 py-20 sm:px-10"
+        id="chat"
+      >
+        <div className="mx-auto max-w-3xl">
+          <p className="text-sm font-semibold tracking-[0.18em] text-cyan-300">
+            ASK THE PORTFOLIO
+          </p>
+          <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">
+            A limited-knowledge AI assistant.
+          </h2>
+          <p className="mt-4 text-slate-300">
+            It answers from Igor&apos;s approved portfolio information and says
+            when it does not know.
+          </p>
+          <ChatPanel />
+        </div>
       </section>
 
       <section className="border-y border-slate-800 bg-slate-950/60" id="work">

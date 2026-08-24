@@ -86,7 +86,10 @@ describe('chat endpoint', () => {
 
     const response = await POST(
       new Request('https://alterigor.example/api/v1/chat', {
-        body: JSON.stringify({ message: 'Hello' }),
+        body: JSON.stringify({
+          message: 'Hello',
+          quotaKey: '00000000-0000-4000-8000-000000000000',
+        }),
         method: 'POST',
       }),
     );
