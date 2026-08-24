@@ -32,9 +32,13 @@ short verification step for each blocking finding.
   injection resistance, unsupported-question handling, generic client errors,
   input/output limits, timeouts, provider failure, and no privileged model
   actions.
-- Availability and cost: confirm rate/quota controls fail closed where needed,
-  and a provider, D1, Resend, or Telegram failure does not break unrelated site
-  functions.
+- Availability and cost: confirm the chat quota is enforced before any model
+  call and fails closed if D1 or `QUOTA_HMAC_SECRET` is unavailable. D1 may
+  hold only an HMAC-hashed anonymous session key, daily bucket, counter, and
+  cleanup timestamp—never a name, email, message, raw IP, or fingerprint.
+  Require tests for quota exhaustion, storage failure, and no provider call
+  after rejection. A provider, D1, Resend, or Telegram failure must not break
+  unrelated site functions.
 - Release readiness: identify the focused tests and checks needed. Do not claim
   a feature is production-ready without evidence from the current change.
 
