@@ -1,0 +1,6 @@
+interface:
+  display_name: 'AlterIgor AI Safety Review'
+  short_description: 'Review AlterIgor changes for privacy and LLM safety'
+  default_prompt: 'Review the proposed AlterIgor change for privacy, LLM safety, and release readiness. Do not modify files unless asked.'
+policy:
+  allow_implicit_invocation: false

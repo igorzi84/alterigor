@@ -3,6 +3,7 @@ import {
   answerQuestion,
   validateMessage,
 } from '@/lib/assistant';
+import { consumeChatQuota, validQuotaKey } from '@/lib/quota';
 
 const unavailableResponse = {
   error:
@@ -34,7 +35,28 @@ export async function POST(request: Request) {
     );
   }
 
+  const quotaKey =
+    typeof body === 'object' && body !== null && 'quotaKey' in body
+      ? body.quotaKey
+      : undefined;
+  if (!validQuotaKey(quotaKey)) {
+    return Response.json(
+      { error: 'Start a new chat session before sending a message.' },
+      { status: 400 },
+    );
+  }
+
   try {
+    const { env } = await import('cloudflare:workers');
+    if (
+      !env.QUOTA_HMAC_SECRET ||
+      !(await consumeChatQuota(env.DB, quotaKey, env.QUOTA_HMAC_SECRET))
+    ) {
+      return Response.json(
+        { error: 'Chat request limit reached. Please try again tomorrow.' },
+        { status: 429 },
+      );
+    }
     const answer = await answerQuestion(message);
     return Response.json({ answer });
   } catch (error) {
