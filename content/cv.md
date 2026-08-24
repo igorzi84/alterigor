@@ -27,11 +27,11 @@ Senior DevOps and Platform Engineer with 15+ years of experience building and op
 - Deployed the service through Helm and GitOps with separate API and worker components, Kubernetes health probes, mutual TLS, encrypted secrets, and environment-specific promotion.
 - Implemented Prometheus metrics, distributed tracing, structured service metadata, actionable alerts, and queue-depth-based worker scaling.
 
-### Cloud Platform GitOps and Deployment Platform
+### Microservice Deployment with Helm, Kustomize, and Argo CD
 
-- Contributed to a GitOps source-of-truth repository managing cloud platform applications across QA, staging, and production Kubernetes environments.
-- Maintained Helm charts, ArgoCD application definitions, environment values, monitoring rules, ingress, secrets, and rollout procedures for production services.
-- Supported deployment standards covering logging, metrics, tracing, service mesh expectations, Kubernetes resource controls, encrypted secrets, and production promotion workflows.
+- Deployed and configured microservices across environments using Helm charts and Kustomize overlays.
+- Added microservice applications to an existing Argo CD environment for GitOps-based deployment and reconciliation.
+- Maintained environment-specific configuration and repeatable deployment workflows for Kubernetes services.
 
 ### Platform Feed Monitoring Service
 
