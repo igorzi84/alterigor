@@ -26,7 +26,7 @@ The first release should include:
 - a contact form that sends messages through a server-side email provider without storing submissions; and
 - an accessible, responsive experience that works with keyboard and touch.
 
-Do not add accounts, persistent visitor profiles, document uploads, payments, autonomous actions, analytics, or social integrations unless the user specifically requests them.
+Do not add accounts, persistent visitor profiles, document uploads, payments, autonomous actions, analytics, or social integrations unless the user specifically requests them. The user has requested limited, privacy-first visitor metrics and Telegram alerts as defined in `docs/plan.md`; do not expand this into identity tracking or cross-site profiling.
 
 ## Source of truth and honesty
 
@@ -42,11 +42,12 @@ Do not add accounts, persistent visitor profiles, document uploads, payments, au
 Treat all visitor input and model output as untrusted.
 
 - Defend against prompt injection and requests for private instructions or hidden data. The assistant cannot execute actions, access secrets, browse private systems, or change content on behalf of a visitor.
-- Minimize data collection. Keep names and recent conversation context in the current browser session only; do not persist chat transcripts or visitor names server-side. Do not put personal message content in logs.
-- Use D1 only for short-lived, privacy-preserving quota counters. Do not use it for chat history, visitor profiles, extended-profile facts, or contact submissions.
+- Minimize data collection. Keep names and recent conversation context in the current browser session only; do not persist chat transcripts or visitor names server-side. Do not put personal message content in logs. A name is a claimed session label, not verified identity.
+- D1 may hold short-lived, privacy-preserving quota counters and visitor metrics only. Do not use it for chat history, visitor profiles, extended-profile facts, contact submissions, contact email addresses, raw IP addresses, browser fingerprints, full referrers, or message content.
+- Measure only an explicit allowlist of useful engagement events. Offer a clear opt-in before optional measurement, document the purpose and retention period, and ensure declining does not block portfolio, chat, or contact functionality.
 - Add server-side input limits, request validation, rate limiting, a per-request/model usage limit, and a fail-closed budget or quota control.
 - Use generic client-facing errors; keep structured operational logs free of secrets, prompts, CV text, full messages, and full model responses.
-- Keep `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `ALTERIGOR_EXTENDED_PROFILE`, `RESEND_API_KEY`, and contact email settings in local `.env` during development and Sites runtime secrets in production. Never commit `.env`, its values, or secret-derived output.
+- Keep `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`, `ALTERIGOR_EXTENDED_PROFILE`, `RESEND_API_KEY`, Telegram credentials, and contact email settings in local `.env` during development and Sites runtime secrets in production. Never commit `.env`, its values, or secret-derived output.
 - If a security or privacy issue is found, state the risk, likely harm, severity, mitigation, and whether implementation must stop before continuing.
 
 ## Engineering expectations

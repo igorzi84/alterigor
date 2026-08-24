@@ -84,10 +84,41 @@ provider failure.
 **Acceptance:** Checks pass, Git contains no secrets or extended-profile facts,
 and the public site has verified graceful failure states.
 
+## PR 7 — Privacy-first visitor insights and Telegram alerts
+
+- Add a server-side, allowlisted visitor-event endpoint for a small set of
+  useful events: first visit in a browser session, chat start, GitHub click,
+  LinkedIn click, contact start, and contact submission.
+- Use only a short-lived random browser-session identifier for event
+  deduplication. Do not collect raw IP addresses, browser fingerprints, full
+  referrers, chat content, visitor names, or contact email addresses as
+  analytics data.
+- Store privacy-preserving aggregate metrics and short-retention event records
+  in D1. Define and test a deletion schedule; do not create visitor profiles or
+  correlate sessions across visits.
+- Add a plain-language privacy notice and a real opt-in choice before optional
+  measurement. The portfolio and contact path must still work if visitors
+  decline.
+- Add a server-side Telegram notifier using `TELEGRAM_BOT_TOKEN` and
+  `TELEGRAM_CHAT_ID` runtime secrets. Notify for qualified events, with a
+  deduplicated first-visit alert and immediate contact-submission alert; do not
+  forward contact email addresses or message content to Telegram.
+- Make notification delivery non-blocking: a Telegram or D1 failure must not
+  affect the portfolio, chat, or contact submission. Record only safe,
+  structured operational failure data.
+
+**Acceptance:** Tests prove event allowlisting, consent enforcement, session
+deduplication, redaction of personal data, retention cleanup, and graceful D1
+and Telegram failures. The UI explains what is measured, why, how long it is
+kept, and how visitors can decline optional measurement.
+
 ## Configuration decisions
 
 - The LLM provider is configured through an OpenAI-compatible interface so a
   free-tier provider can change without product rewrites.
 - Resend is the initial contact-form provider.
+- Telegram is the initial private notification channel for qualified visitor
+  engagement events. It receives no contact email address or message content.
 - Redis and SOPS are not part of the first release. D1 holds only short-lived
-  quota counters, and public-on-request facts are a Sites runtime secret.
+  quota counters and privacy-preserving visitor metrics; public-on-request
+  facts are a Sites runtime secret.
