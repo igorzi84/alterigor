@@ -35,21 +35,22 @@ See [docs/plan.md](docs/plan.md) for the staged implementation plan and
 
 ## Reusable Codex safety-review skill
 
-This repository includes an explicit-only Codex skill for reviewing chatbot,
-contact, analytics, and Telegram changes before implementation or merge. It is
-portfolio evidence of a repeatable AI-assisted engineering control, not part of
-the deployed site.
+This repository includes explicit-only Codex skills for reviewing chatbot,
+contact, analytics, and Telegram changes, and for preparing pull requests. They
+are portfolio evidence of repeatable AI-assisted engineering controls, not part
+of the deployed site.
 
 Install it into your personal Codex skills directory:
 
 ```bash
-cp -R skills/alterigor-ai-safety-review ~/.codex/skills/
+cp -R skills/alterigor-ai-safety-review skills/alterigor-pr-ready ~/.codex/skills/
 ```
 
 Then invoke it explicitly from Codex:
 
 ```text
 $alterigor-ai-safety-review review the current branch before I commit
+$alterigor-pr-ready review, commit, push, and open a PR for the current branch
 ```
 
 The skill does not change files or deploy by itself. Never add API keys,
