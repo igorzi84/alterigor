@@ -13,14 +13,17 @@ export function ContactForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.fromEntries(form)),
       });
-      setStatus(
-        response.ok
-          ? 'Thanks — your message was sent.'
-          : 'Message could not be sent. Please try again later.',
-      );
       if (response.ok) {
+        setStatus('Thanks — your message was sent.');
         event.currentTarget.reset();
         track('contact_submission');
+      } else {
+        const data = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setStatus(
+          data.error ?? 'Message could not be sent. Please try again later.',
+        );
       }
     } catch {
       setStatus('Message could not be sent. Please try again later.');

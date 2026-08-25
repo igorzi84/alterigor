@@ -4,6 +4,7 @@ import {
   getProviderSettings,
   validateMessage,
 } from '@/lib/assistant';
+import { getEnvironment } from '@/lib/env';
 import {
   CHAT_SESSION_LIMIT,
   chatQuotaRemaining,
@@ -70,8 +71,7 @@ function streamResponse(
 }
 
 async function environment() {
-  const { env } = await import('cloudflare:workers');
-  return env;
+  return getEnvironment();
 }
 
 type ChatDependencies = {
@@ -151,8 +151,8 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
     try {
       const env = await dependencies.getEnvironment();
       const settings = dependencies.getProviderSettings(env);
+      if (!env.QUOTA_HMAC_SECRET) throw new AssistantConfigurationError();
       if (
-        !env.QUOTA_HMAC_SECRET ||
         !(await dependencies.consumeChatQuota(
           env.DB,
           session.value,

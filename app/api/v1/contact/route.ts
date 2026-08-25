@@ -1,4 +1,5 @@
 import { deliverContact, validateContact } from '@/lib/contact';
+import { getEnvironment, getNetworkAddress } from '@/lib/env';
 import { consumeContactQuota } from '@/lib/quota';
 
 export async function POST(request: Request) {
@@ -10,18 +11,17 @@ export async function POST(request: Request) {
         { error: 'Enter a valid name, email, and message.' },
         { status: 400 },
       );
-    const networkAddress = request.headers.get('CF-Connecting-IP');
-    if (!networkAddress)
+    const networkAddress = getNetworkAddress(request);
+    const env = await getEnvironment();
+    if (!env.QUOTA_HMAC_SECRET)
       return Response.json(
         {
           error:
             'Contact delivery is temporarily unavailable. Please try again later.',
         },
-        { status: 400 },
+        { status: 503 },
       );
-    const { env } = await import('cloudflare:workers');
     if (
-      !env.QUOTA_HMAC_SECRET ||
       !(await consumeContactQuota(
         env.DB,
         networkAddress,

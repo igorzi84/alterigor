@@ -12,7 +12,7 @@ export const INSIGHT_EVENTS = [
 export type InsightEvent = (typeof INSIGHT_EVENTS)[number];
 
 type InsightEnvironment = {
-  DB: D1Database;
+  DB?: D1Database;
   QUOTA_HMAC_SECRET?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
@@ -70,7 +70,8 @@ export async function recordInsight(
   request: InsightRequest,
   environment: InsightEnvironment,
 ): Promise<boolean> {
-  if (!environment.QUOTA_HMAC_SECRET) throw new Error('Insights unavailable.');
+  if (!environment.DB || !environment.QUOTA_HMAC_SECRET)
+    throw new Error('Insights unavailable.');
   const now = Date.now();
   const hash = await sessionHash(
     request.sessionId,

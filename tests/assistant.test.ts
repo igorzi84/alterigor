@@ -6,6 +6,7 @@ import {
   MAX_MESSAGE_CHARACTERS,
   validateMessage,
 } from '../lib/assistant';
+import type { AppEnvironment } from '../lib/env';
 import { createChatHandlers, POST } from '../app/api/v1/chat/route';
 
 const environment = {
@@ -154,6 +155,7 @@ describe('chat endpoint', () => {
 
   it('returns a generic unavailable response when the provider fails', async () => {
     vi.stubEnv('TEST_PRIMARY_KEY', 'test-key');
+    vi.stubEnv('QUOTA_HMAC_SECRET', 'test-secret');
     vi.stubEnv(
       'LLM_PROVIDERS',
       JSON.stringify([
@@ -182,11 +184,12 @@ describe('chat endpoint', () => {
       }),
     );
 
-    expect(response.status).toBe(502);
-    await expect(response.json()).resolves.toEqual({
-      error:
-        'The portfolio assistant is temporarily unavailable. Please try again later.',
-    });
+    expect(response.status).toBe(200);
+    const text = await response.text();
+    expect(text).toContain('event: error');
+    expect(text).toContain(
+      'The portfolio assistant is temporarily unavailable. Please try again later.',
+    );
   });
 
   it('rejects malformed requests before contacting a provider', async () => {
@@ -219,7 +222,7 @@ describe('chat endpoint', () => {
           ]),
           QUOTA_HMAC_SECRET: 'test-secret',
           TEST_PROVIDER_KEY: 'test-key',
-        }) as unknown as Cloudflare.Env,
+        }) as AppEnvironment,
     });
 
     const response = await quotaLimitedPost(

@@ -27,12 +27,13 @@ async function keyHash(value: string, secret: string): Promise<string> {
 }
 
 async function consumeQuota(
-  database: D1Database,
+  database: D1Database | undefined,
   quotaKey: string,
   secret: string,
   table: 'chat_quota' | 'contact_quota' | 'insight_quota',
   limit: number,
 ): Promise<boolean> {
+  if (!database) return true;
   const bucket = new Date().toISOString().slice(0, 10);
   const hash = await keyHash(quotaKey, secret);
   await database
@@ -54,11 +55,12 @@ async function consumeQuota(
 }
 
 async function quotaCount(
-  database: D1Database,
+  database: D1Database | undefined,
   quotaKey: string,
   secret: string,
   table: 'chat_quota' | 'contact_quota' | 'insight_quota',
 ): Promise<number> {
+  if (!database) return 0;
   const bucket = new Date().toISOString().slice(0, 10);
   const hash = await keyHash(quotaKey, secret);
   await database
@@ -78,7 +80,7 @@ async function quotaCount(
 }
 
 export async function consumeChatQuota(
-  database: D1Database,
+  database: D1Database | undefined,
   quotaKey: string,
   secret: string,
 ): Promise<boolean> {
@@ -92,16 +94,17 @@ export async function consumeChatQuota(
 }
 
 export async function chatQuotaRemaining(
-  database: D1Database,
+  database: D1Database | undefined,
   quotaKey: string,
   secret: string,
 ): Promise<number> {
+  if (!database) return CHAT_SESSION_LIMIT;
   const count = await quotaCount(database, quotaKey, secret, 'chat_quota');
   return Math.max(0, CHAT_SESSION_LIMIT - count);
 }
 
 export async function consumeContactQuota(
-  database: D1Database,
+  database: D1Database | undefined,
   networkAddress: string,
   secret: string,
 ): Promise<boolean> {
@@ -115,7 +118,7 @@ export async function consumeContactQuota(
 }
 
 export async function consumeInsightQuota(
-  database: D1Database,
+  database: D1Database | undefined,
   networkAddress: string,
   secret: string,
 ): Promise<boolean> {

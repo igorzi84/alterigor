@@ -62,7 +62,7 @@ of the deployed site.
 Install it into your personal Codex skills directory:
 
 ```bash
-cp -R skills/alterigor-ai-safety-review skills/alterigor-pr-ready ~/.codex/skills/
+cp -R .agents/skills/alterigor-ai-safety-review .agents/skills/alterigor-pr-ready ~/.codex/skills/
 ```
 
 Then invoke it explicitly from Codex:

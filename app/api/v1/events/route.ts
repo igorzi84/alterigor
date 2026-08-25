@@ -1,4 +1,5 @@
 import { recordInsightSafely, validateInsightRequest } from '@/lib/insights';
+import { getEnvironment, getNetworkAddress } from '@/lib/env';
 import { consumeInsightQuota } from '@/lib/quota';
 
 export async function POST(request: Request) {
@@ -12,8 +13,8 @@ export async function POST(request: Request) {
   if (!insight) {
     return Response.json({ error: 'Invalid event.' }, { status: 400 });
   }
-  const { env } = await import('cloudflare:workers');
-  const networkAddress = request.headers.get('CF-Connecting-IP');
+  const env = await getEnvironment();
+  const networkAddress = getNetworkAddress(request);
   try {
     if (
       networkAddress &&
