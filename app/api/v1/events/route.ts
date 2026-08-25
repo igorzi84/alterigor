@@ -1,0 +1,29 @@
+import { recordInsightSafely, validateInsightRequest } from '@/lib/insights';
+import { consumeInsightQuota } from '@/lib/quota';
+
+export async function POST(request: Request) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Send a JSON object.' }, { status: 400 });
+  }
+  const insight = validateInsightRequest(body);
+  if (!insight) {
+    return Response.json({ error: 'Invalid event.' }, { status: 400 });
+  }
+  const { env } = await import('cloudflare:workers');
+  const networkAddress = request.headers.get('CF-Connecting-IP');
+  try {
+    if (
+      networkAddress &&
+      env.QUOTA_HMAC_SECRET &&
+      (await consumeInsightQuota(env.DB, networkAddress, env.QUOTA_HMAC_SECRET))
+    ) {
+      await recordInsightSafely(insight, env);
+    }
+  } catch {
+    console.error(JSON.stringify({ event: 'visitor_insight_failed' }));
+  }
+  return new Response(null, { status: 204 });
+}

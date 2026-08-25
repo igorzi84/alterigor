@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   consumeChatQuota,
   consumeContactQuota,
+  consumeInsightQuota,
   validQuotaKey,
 } from '../lib/quota';
 
@@ -61,6 +62,20 @@ describe('chat quota', () => {
 
     await expect(
       consumeContactQuota(database, '203.0.113.7', 'test-secret'),
+    ).resolves.toBe(false);
+  });
+
+  it('limits anonymous insight writes through a separate short-lived quota', async () => {
+    const database = fakeDatabase();
+
+    for (let request = 0; request < 30; request += 1) {
+      await expect(
+        consumeInsightQuota(database, '203.0.113.7', 'test-secret'),
+      ).resolves.toBe(true);
+    }
+
+    await expect(
+      consumeInsightQuota(database, '203.0.113.7', 'test-secret'),
     ).resolves.toBe(false);
   });
 });
