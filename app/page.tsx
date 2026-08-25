@@ -1,6 +1,7 @@
 import { profile } from '@/content/profile';
 import { site } from '@/lib/site';
 import { ChatPanel } from './components/chat-panel';
+import { ContactForm } from './components/contact-form';
 
 const navigation = [
   ['Work', '#work'],
@@ -63,6 +64,12 @@ export default function Home() {
           </a>
           <a
             className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
+            href="#contact"
+          >
+            Contact Igor
+          </a>
+          <a
+            className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
             href={profile.contact.github}
             rel="noreferrer"
             target="_blank"
@@ -99,7 +106,7 @@ export default function Home() {
       </section>
 
       <section
-        className="border-t border-slate-800 bg-slate-950/60 px-6 py-20 sm:px-10"
+        className="border-y border-slate-800 bg-slate-950/60 px-6 py-20 sm:px-10"
         id="chat"
       >
         <div className="mx-auto max-w-3xl">
@@ -107,7 +114,7 @@ export default function Home() {
             ASK THE PORTFOLIO
           </p>
           <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl">
-            A limited-knowledge AI assistant.
+            Talk to AlterIgor.
           </h2>
           <p className="mt-4 text-slate-300">
             It answers from Igor&apos;s approved portfolio information and says
@@ -217,6 +224,16 @@ export default function Home() {
             </ul>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-6 py-20 sm:px-10" id="contact">
+        <p className="text-sm font-semibold tracking-[0.18em] text-cyan-300">
+          CONTACT
+        </p>
+        <h2 className="mt-5 text-3xl font-semibold sm:text-5xl">
+          Start a conversation.
+        </h2>
+        <ContactForm />
       </section>
 
       <footer className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-10">

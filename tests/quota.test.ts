@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { consumeChatQuota, validQuotaKey } from '../lib/quota';
+import {
+  consumeChatQuota,
+  consumeContactQuota,
+  validQuotaKey,
+} from '../lib/quota';
 
 function fakeDatabase() {
   let count = 0;
@@ -44,5 +48,19 @@ describe('chat quota', () => {
     await expect(
       consumeChatQuota(database, quotaKey, 'test-secret'),
     ).rejects.toThrow('D1 unavailable');
+  });
+
+  it('limits contacts by a server-derived network key', async () => {
+    const database = fakeDatabase();
+
+    for (let request = 0; request < 5; request += 1) {
+      await expect(
+        consumeContactQuota(database, '203.0.113.7', 'test-secret'),
+      ).resolves.toBe(true);
+    }
+
+    await expect(
+      consumeContactQuota(database, '203.0.113.7', 'test-secret'),
+    ).resolves.toBe(false);
   });
 });
