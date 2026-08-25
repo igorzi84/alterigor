@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --config vitest.config.ts"
+    "test": "vitest run --config vitest.config.ts",
+    "evaluate:chat": "node scripts/evaluate-chat.mjs"
   },
   "dependencies": {
     "next": "16.3.2",
