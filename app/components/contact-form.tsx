@@ -6,7 +6,11 @@ export function ContactForm() {
   const [status, setStatus] = useState('');
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    // React clears currentTarget after the synchronous event handler returns.
+    // Keep the form element before awaiting delivery so a successful send does
+    // not turn into a client-side error while resetting the form.
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     try {
       const response = await fetch('/api/v1/contact', {
         method: 'POST',
@@ -15,7 +19,7 @@ export function ContactForm() {
       });
       if (response.ok) {
         setStatus('Thanks — your message was sent.');
-        event.currentTarget.reset();
+        formElement.reset();
         track('contact_submission');
       } else {
         const data = (await response.json().catch(() => ({}))) as {
