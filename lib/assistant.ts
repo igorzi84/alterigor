@@ -1,7 +1,7 @@
 import { profile } from '@/content/profile';
 
 const MAX_ANSWER_CHARACTERS = 1_600;
-const MAX_COMPLETION_TOKENS = 400;
+export const MAX_COMPLETION_TOKENS = 400;
 const REQUEST_TIMEOUT_MS = 15_000;
 
 export const MAX_MESSAGE_CHARACTERS = 1_200;

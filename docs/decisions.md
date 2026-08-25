@@ -1,5 +1,18 @@
 # Architecture decisions
 
+## 2026-08-25 — Manual deployed-chat evaluation, not credentialed CI
+
+**Decision:** Keep the compact chat evaluation set version-controlled, but run
+it only as an explicit command against a configured deployment. CI validates the
+case-set structure without calling a provider.
+
+**Rationale:** This keeps model requests, answers, and provider cost out of CI
+while leaving groundedness, safety, privacy, latency, and token-ceiling checks
+repeatable before release.
+
+**Non-goals:** Automated semantic grading, committing provider pricing, storing
+evaluation answers, or using visitor data as evaluation input.
+
 ## 2026-08-25 — Consent-based aggregate visitor insights
 
 **Decision:** Collect only six allowlisted engagement events after a visitor

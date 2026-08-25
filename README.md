@@ -28,10 +28,29 @@ npm run build
 GitHub Actions runs the same checks without credentials or deployment. OpenAI
 Sites deployment remains a separate manual action after the project is ready.
 
+## Chat evaluation
+
+The compact evaluation set is in `evals/chat-cases.json`. It is intentionally
+not part of CI because it sends approved test prompts to a configured deployed
+assistant. Run it only against a deployment that has its runtime configuration:
+
+```bash
+EVALUATION_URL=https://your-site.example/api/v1/chat npm run evaluate:chat
+```
+
+The evaluator reports response latency and the configured maximum output-token
+ceiling. Review each answer against its expected boundary before publishing
+results; it does not store answers or send them anywhere other than the target
+endpoint.
+
 ## Project plan
 
 See [docs/plan.md](docs/plan.md) for the staged implementation plan and
 [AGENTS.md](AGENTS.md) for the operating, privacy, and security rules.
+
+Release documentation: [architecture](docs/architecture.md),
+[threat model](docs/threat-model.md), [operations](docs/operations.md), and
+[evaluation guide](docs/evaluation.md).
 
 ## Reusable Codex safety-review skill
 
