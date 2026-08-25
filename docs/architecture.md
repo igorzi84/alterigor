@@ -41,12 +41,14 @@ transcripts.
 Contact delivery validates voluntary name, email, and message fields, applies a
 short-lived HMAC-hashed network quota, and sends the message directly through
 Resend without persisting it. Optional analytics use a separate browser-session
-UUID, hashed before D1 storage. Only six allowlisted engagement events are
-accepted after opt-in; event records are deleted after 30 days.
+UUID, hashed before D1 storage. A first-visit event is essential to the generic
+unique-visit alert; the other five allowlisted engagement events require opt-in.
+Event records are deleted after 30 days.
 
-Telegram receives only a generic first-visit or successful-contact notification.
-It never receives a visitor name, email address, message, chat content, or
-session identifier. Resend, D1, and Telegram failures are isolated from
+Telegram receives a generic first-visit alert for every browser session. When a
+visitor opts in, it also receives generic chat, link-click, and contact-activity
+alerts. It never receives a visitor name, email address, message, chat content,
+or session identifier. Resend, D1, and Telegram failures are isolated from
 unrelated site functions.
 
 ## Non-goals

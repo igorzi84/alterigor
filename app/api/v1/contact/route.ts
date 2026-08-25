@@ -1,6 +1,5 @@
 import { deliverContact, validateContact } from '@/lib/contact';
 import { consumeContactQuota } from '@/lib/quota';
-import { notifyTelegram } from '@/lib/insights';
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +33,6 @@ export async function POST(request: Request) {
         { status: 429 },
       );
     await deliverContact(contact, env);
-    void notifyTelegram('contact_submission', env);
     return Response.json({ ok: true });
   } catch {
     return Response.json(

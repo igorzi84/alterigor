@@ -46,22 +46,33 @@ export function InsightsProvider({ children }: { children: ReactNode }) {
     () => null,
   );
 
+  const send = useMemo(
+    () =>
+      (event: InsightEvent, optionalMetrics = false) => {
+        void fetch('/api/v1/events', {
+          body: JSON.stringify({
+            ...(optionalMetrics ? { consent: true } : {}),
+            event,
+            sessionId: sessionId(),
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          keepalive: true,
+          method: 'POST',
+        }).catch(() => undefined);
+      },
+    [],
+  );
+
   const track = useMemo(
-    () => (event: InsightEvent) => {
-      if (consent !== 'accepted') return;
-      void fetch('/api/v1/events', {
-        body: JSON.stringify({ consent: true, event, sessionId: sessionId() }),
-        headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
-        method: 'POST',
-      }).catch(() => undefined);
+    () => (event: Exclude<InsightEvent, 'first_visit'>) => {
+      if (consent === 'accepted') send(event, true);
     },
-    [consent],
+    [consent, send],
   );
 
   useEffect(() => {
-    if (consent === 'accepted') track('first_visit');
-  }, [consent, track]);
+    send('first_visit');
+  }, [send]);
 
   function decide(value: 'accepted' | 'declined') {
     localStorage.setItem(consentKey, value);
@@ -77,10 +88,11 @@ export function InsightsProvider({ children }: { children: ReactNode }) {
             Optional anonymous metrics
           </p>
           <p className="mt-1 leading-6 text-slate-300">
-            With your permission, this site counts a few interactions to improve
-            the portfolio. It does not collect your name, chat, message, email,
-            IP address, or browsing profile. Anonymous event records are deleted
-            after 30 days.
+            One anonymous browser-session visit sends a generic alert to Igor.
+            Allow optional interaction metrics to send anonymous alerts for chat
+            starts, GitHub or LinkedIn clicks, and contact activity. The site
+            never collects your name, chat, message, email, IP address, or
+            browsing profile; hashed event records are deleted after 30 days.
           </p>
           <div className="mt-3 flex gap-3">
             <button
