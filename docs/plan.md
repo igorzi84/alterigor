@@ -84,7 +84,38 @@ provider failure.
 **Acceptance:** Checks pass, Git contains no secrets or extended-profile facts,
 and the public site has verified graceful failure states.
 
-## PR 7 — Privacy-first visitor insights and Telegram alerts
+## PR 7 — Five-question chat limits and visible model fallback
+
+- Enforce a server-authoritative limit of five new model requests per browser
+  session. The browser-session UUID is HMAC-hashed before D1 storage; clearing
+  or changing a client-side counter must not bypass the server limit.
+- Add a non-consuming chat-status response so the UI can show the exact
+  `N of 5 questions left` value at session start, after a new request, and
+  after a page reload. Reused exact-question answers do not consume a request.
+- Add a non-secret `LLM_DISPLAY_NAME` runtime setting. Return only this
+  explicitly approved public label to the browser; never expose `LLM_MODEL`,
+  provider base URL, API key, or other provider configuration. While a request
+  is in progress, show `Trying {LLM_DISPLAY_NAME}…`.
+- Configure an ordered, server-only fallback list with an explicitly approved
+  public display label for each model. When the active provider returns an
+  eligible limit or capacity response, stream a server-confirmed status event
+  so the UI says `Model limit reached. Trying {next display name}…` before the
+  fallback attempt. Do not infer a switch from a client-side timer or expose a
+  raw provider error.
+- A request that falls back still consumes only one of the five session
+  questions. Retry only configured, bounded, eligible limit/capacity failures;
+  do not fall back on validation, safety, or malformed-response failures. If
+  all configured models are unavailable, show the existing generic unavailable
+  state without naming private provider configuration.
+- Disable new-question submission at zero remaining requests and show a clear
+  session-limit message. Continue to handle unavailable and rate-limited
+  states without exposing operational details.
+
+**Acceptance:** Tests prove the visible remaining-count contract, model-label
+redaction, exact-repeat cache behavior, visible fallback transitions,
+one-question fallback accounting, and no provider call after the session limit.
+
+## PR 8 — Privacy-first visitor insights and Telegram alerts
 
 - Add a server-side, allowlisted visitor-event endpoint for a small set of
   useful events: first visit in a browser session, chat start, GitHub click,
@@ -116,6 +147,9 @@ kept, and how visitors can decline optional measurement.
 
 - The LLM provider is configured through an OpenAI-compatible interface so a
   free-tier provider can change without product rewrites.
+- `LLM_DISPLAY_NAME` is a deliberately public, human-readable model label used
+  by the chat UI. It may name the selected model, but it is independent from
+  the server-only provider configuration and contains no credential or endpoint.
 - Resend is the initial contact-form provider.
 - Telegram is the initial private notification channel for qualified visitor
   engagement events. It receives no contact email address or message content.
