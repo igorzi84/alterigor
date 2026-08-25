@@ -143,6 +143,11 @@ export function ChatPanel() {
             data.type === 'fallback' &&
             data.displayName
           ) {
+            setStatus((current) =>
+              current
+                ? { ...current, displayName: data.displayName! }
+                : current,
+            );
             setProviderStatus(
               `Model limit reached. Trying ${data.displayName}…`,
             );
@@ -152,6 +157,13 @@ export function ChatPanel() {
           }
           if (parsed.name === 'answer' && data.answer) {
             answered = true;
+            if (data.displayName) {
+              setStatus((current) =>
+                current
+                  ? { ...current, displayName: data.displayName! }
+                  : current,
+              );
+            }
             cacheAnswer(
               sessionStorage,
               cachedAnswersKey,
@@ -209,6 +221,9 @@ export function ChatPanel() {
       <p className="text-sm text-slate-300">
         Hi {name}. Ask about Igor&apos;s platform engineering work.
       </p>
+      {status ? (
+        <p className="mt-2 text-sm text-cyan-200">Using {status.displayName}</p>
+      ) : null}
       <div className="mt-4 space-y-3" aria-live="polite">
         {messages.map((item, index) => (
           <p

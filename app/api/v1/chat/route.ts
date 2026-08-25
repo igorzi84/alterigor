@@ -174,12 +174,14 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
         env.QUOTA_HMAC_SECRET,
       );
       return streamResponse(async (controller) => {
+        let activeDisplayName = settings.providers[0].displayName;
         try {
           const answer = await dependencies.answerQuestion(
             message,
             env,
             fetch,
             (displayName) => {
+              activeDisplayName = displayName;
               controller.enqueue(
                 event('status', { displayName, type: 'fallback' }),
               );
@@ -188,7 +190,7 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
           controller.enqueue(
             event('answer', {
               answer,
-              displayName: settings.providers[0].displayName,
+              displayName: activeDisplayName,
               remaining,
             }),
           );
