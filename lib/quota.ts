@@ -1,5 +1,6 @@
 export const CHAT_SESSION_LIMIT = 5;
 const CONTACT_DAILY_LIMIT = 5;
+const INSIGHT_DAILY_LIMIT = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function validQuotaKey(value: unknown): value is string {
@@ -29,7 +30,7 @@ async function consumeQuota(
   database: D1Database,
   quotaKey: string,
   secret: string,
-  table: 'chat_quota' | 'contact_quota',
+  table: 'chat_quota' | 'contact_quota' | 'insight_quota',
   limit: number,
 ): Promise<boolean> {
   const bucket = new Date().toISOString().slice(0, 10);
@@ -56,7 +57,7 @@ async function quotaCount(
   database: D1Database,
   quotaKey: string,
   secret: string,
-  table: 'chat_quota' | 'contact_quota',
+  table: 'chat_quota' | 'contact_quota' | 'insight_quota',
 ): Promise<number> {
   const bucket = new Date().toISOString().slice(0, 10);
   const hash = await keyHash(quotaKey, secret);
@@ -110,5 +111,19 @@ export async function consumeContactQuota(
     secret,
     'contact_quota',
     CONTACT_DAILY_LIMIT,
+  );
+}
+
+export async function consumeInsightQuota(
+  database: D1Database,
+  networkAddress: string,
+  secret: string,
+): Promise<boolean> {
+  return consumeQuota(
+    database,
+    networkAddress,
+    secret,
+    'insight_quota',
+    INSIGHT_DAILY_LIMIT,
   );
 }
