@@ -140,7 +140,9 @@ export async function recordInsightSafely(
   try {
     const inserted = await recordInsight(request, environment);
     if (inserted && (request.event === 'first_visit' || request.consent)) {
-      void notifyTelegram(request.event, environment);
+      // Cloudflare can finish the worker as soon as this request returns.
+      // Await delivery so the notification is not abandoned with the request.
+      await notifyTelegram(request.event, environment);
     }
   } catch {
     console.error(JSON.stringify({ event: 'visitor_insight_failed' }));
