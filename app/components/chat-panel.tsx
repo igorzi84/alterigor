@@ -6,6 +6,7 @@ import {
   getCachedAnswer,
   questionFingerprint,
 } from '@/lib/chat-cache';
+import { useInsights } from './insights';
 
 const sessionNameKey = 'alterigor-visitor-name';
 const cachedAnswersKey = 'alterigor-chat-answer-cache';
@@ -30,6 +31,7 @@ function parseEvent(block: string): { name: string; data: unknown } | null {
 }
 
 export function ChatPanel() {
+  const { track } = useInsights();
   const [sessionVersion, setSessionVersion] = useState(0);
   const name = useSyncExternalStore(
     subscribeToSessionStorage,
@@ -67,6 +69,7 @@ export function ChatPanel() {
     const value = draftName.trim().slice(0, 80);
     if (!value) return;
     sessionStorage.setItem(sessionNameKey, value);
+    track('chat_start');
     setSessionVersion((version) => version + 1);
   }
 

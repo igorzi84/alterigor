@@ -1,5 +1,22 @@
 # Architecture decisions
 
+## 2026-08-25 — Consent-based aggregate visitor insights
+
+**Decision:** Collect only six allowlisted engagement events after a visitor
+explicitly opts in: first visit, chat start, GitHub click, LinkedIn click,
+contact start, and contact submission. An ephemeral browser-session UUID is
+HMAC-hashed before storage in D1. Event records retain no content or identity
+fields and are deleted after 30 days.
+
+**Rationale:** This provides a small signal of portfolio engagement without
+visitor profiles, cross-site tracking, or a reason to retain sensitive data.
+
+**Failure behavior:** Declining consent prevents all event requests. D1 and
+Telegram failures are isolated from portfolio, chat, and contact behavior.
+
+**Non-goals:** Analytics dashboards, individual visitor reporting, contact or
+chat-content telemetry, and identity verification.
+
 ## 2026-08-25 — Five-question chat sessions and a public model label
 
 **Decision:** Limit each browser session to five new model requests, enforced

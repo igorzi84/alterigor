@@ -1,6 +1,8 @@
 'use client';
 import { FormEvent, useState } from 'react';
+import { useInsights } from './insights';
 export function ContactForm() {
+  const { track } = useInsights();
   const [status, setStatus] = useState('');
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -16,13 +18,20 @@ export function ContactForm() {
           ? 'Thanks — your message was sent.'
           : 'Message could not be sent. Please try again later.',
       );
-      if (response.ok) event.currentTarget.reset();
+      if (response.ok) {
+        event.currentTarget.reset();
+        track('contact_submission');
+      }
     } catch {
       setStatus('Message could not be sent. Please try again later.');
     }
   }
   return (
-    <form className="mt-8 grid gap-3" onSubmit={submit}>
+    <form
+      className="mt-8 grid gap-3"
+      onFocus={() => track('contact_start')}
+      onSubmit={submit}
+    >
       <label>
         Name
         <input
