@@ -6,12 +6,18 @@ import {
   MAX_MESSAGE_CHARACTERS,
   validateMessage,
 } from '../lib/assistant';
-import { POST } from '../app/api/v1/chat/route';
+import { createChatHandlers, POST } from '../app/api/v1/chat/route';
 
 const environment = {
-  LLM_API_KEY: 'test-key',
-  LLM_BASE_URL: 'https://provider.example/v1/',
-  LLM_MODEL: 'free-model',
+  LLM_PROVIDERS: JSON.stringify([
+    {
+      apiKeyEnv: 'TEST_PRIMARY_KEY',
+      baseUrl: 'https://provider.example/v1/',
+      displayName: 'Primary model',
+      model: 'free-model',
+    },
+  ]),
+  TEST_PRIMARY_KEY: 'test-key',
 };
 
 describe('assistant provider', () => {
@@ -39,6 +45,7 @@ describe('assistant provider', () => {
       Authorization: 'Bearer test-key',
     });
     expect(JSON.parse(request?.body as string)).toMatchObject({
+      max_completion_tokens: 400,
       model: 'free-model',
       temperature: 0,
     });
@@ -59,6 +66,78 @@ describe('assistant provider', () => {
     );
   });
 
+  it('uses a configured fallback only after a capacity response', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 429 }))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: 'Fallback answer.' } }],
+          }),
+          { status: 200 },
+        ),
+      );
+    const transitions: string[] = [];
+
+    await expect(
+      answerQuestion(
+        'Hello',
+        {
+          ...environment,
+          GROQ_API_KEY: 'groq-test-key',
+          LLM_PROVIDERS: JSON.stringify([
+            {
+              apiKeyEnv: 'TEST_PRIMARY_KEY',
+              baseUrl: 'https://provider.example/v1/',
+              displayName: 'Primary model',
+              model: 'free-model',
+            },
+            {
+              apiKeyEnv: 'GROQ_API_KEY',
+              baseUrl: 'https://groq.example/openai/v1',
+              displayName: 'Backup model',
+              model: 'backup-model',
+            },
+          ]),
+        },
+        fetchMock,
+        (displayName) => {
+          transitions.push(displayName);
+        },
+      ),
+    ).resolves.toBe('Fallback answer.');
+
+    expect(transitions).toEqual(['Backup model']);
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      'https://groq.example/openai/v1/chat/completions',
+    );
+    expect(fetchMock.mock.calls[1][1]?.headers).toMatchObject({
+      Authorization: 'Bearer groq-test-key',
+    });
+    expect(
+      JSON.parse(fetchMock.mock.calls[1][1]?.body as string),
+    ).toMatchObject({
+      model: 'backup-model',
+    });
+  });
+
+  it('fails closed when a fallback references an unavailable secret', async () => {
+    await expect(
+      answerQuestion('Hello', {
+        ...environment,
+        LLM_PROVIDERS: JSON.stringify([
+          {
+            apiKeyEnv: 'MISSING_PROVIDER_KEY',
+            baseUrl: 'https://provider.example/v1',
+            displayName: 'Backup model',
+            model: 'backup-model',
+          },
+        ]),
+      }),
+    ).rejects.toBeInstanceOf(AssistantConfigurationError);
+  });
+
   it('rejects invalid visitor messages', () => {
     expect(validateMessage('')).toBeNull();
     expect(validateMessage('x'.repeat(MAX_MESSAGE_CHARACTERS + 1))).toBeNull();
@@ -74,9 +153,18 @@ describe('chat endpoint', () => {
   });
 
   it('returns a generic unavailable response when the provider fails', async () => {
-    vi.stubEnv('LLM_API_KEY', 'test-key');
-    vi.stubEnv('LLM_BASE_URL', 'https://provider.example/v1');
-    vi.stubEnv('LLM_MODEL', 'free-model');
+    vi.stubEnv('TEST_PRIMARY_KEY', 'test-key');
+    vi.stubEnv(
+      'LLM_PROVIDERS',
+      JSON.stringify([
+        {
+          apiKeyEnv: 'TEST_PRIMARY_KEY',
+          baseUrl: 'https://provider.example/v1',
+          displayName: 'Primary model',
+          model: 'free-model',
+        },
+      ]),
+    );
     vi.stubGlobal(
       'fetch',
       vi
@@ -110,5 +198,39 @@ describe('chat endpoint', () => {
     );
 
     expect(response.status).toBe(400);
+  });
+
+  it('does not call a provider when the session quota rejects a request', async () => {
+    const answerQuestionMock = vi.fn<typeof answerQuestion>();
+    const consumeQuotaMock = vi.fn().mockResolvedValue(false);
+    const { POST: quotaLimitedPost } = createChatHandlers({
+      answerQuestion: answerQuestionMock,
+      consumeChatQuota: consumeQuotaMock,
+      getEnvironment: async () =>
+        ({
+          DB: {} as D1Database,
+          LLM_PROVIDERS: JSON.stringify([
+            {
+              apiKeyEnv: 'TEST_PROVIDER_KEY',
+              baseUrl: 'https://provider.example/v1',
+              displayName: 'Test provider',
+              model: 'test-model',
+            },
+          ]),
+          QUOTA_HMAC_SECRET: 'test-secret',
+          TEST_PROVIDER_KEY: 'test-key',
+        }) as unknown as Cloudflare.Env,
+    });
+
+    const response = await quotaLimitedPost(
+      new Request('https://alterigor.example/api/v1/chat', {
+        body: JSON.stringify({ message: 'Hello' }),
+        method: 'POST',
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(consumeQuotaMock).toHaveBeenCalledOnce();
+    expect(answerQuestionMock).not.toHaveBeenCalled();
   });
 });

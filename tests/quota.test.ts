@@ -24,10 +24,10 @@ describe('chat quota', () => {
     expect(validQuotaKey('visitor@example.com')).toBe(false);
   });
 
-  it('rejects the twenty-first request before a provider call', async () => {
+  it('rejects the sixth request for one browser session before a provider call', async () => {
     const database = fakeDatabase();
 
-    for (let request = 0; request < 20; request += 1) {
+    for (let request = 0; request < 5; request += 1) {
       await expect(
         consumeChatQuota(database, quotaKey, 'test-secret'),
       ).resolves.toBe(true);

@@ -1,69 +1,221 @@
 import {
   AssistantConfigurationError,
   answerQuestion,
+  getProviderSettings,
   validateMessage,
 } from '@/lib/assistant';
-import { consumeChatQuota, validQuotaKey } from '@/lib/quota';
+import {
+  CHAT_SESSION_LIMIT,
+  chatQuotaRemaining,
+  consumeChatQuota,
+  validQuotaKey,
+} from '@/lib/quota';
 
-const unavailableResponse = {
-  error:
-    'The portfolio assistant is temporarily unavailable. Please try again later.',
+const unavailableMessage =
+  'The portfolio assistant is temporarily unavailable. Please try again later.';
+
+function event(name: string, payload: object): Uint8Array {
+  return new TextEncoder().encode(
+    `event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`,
+  );
+}
+
+const sessionCookieName = 'alterigor_chat_session';
+
+function sessionId(request: Request): { value: string; isNew: boolean } {
+  const cookies = request.headers.get('Cookie') ?? '';
+  const value = cookies
+    .split(';')
+    .map((cookie) => cookie.trim().split('=', 2))
+    .find(([name]) => name === sessionCookieName)?.[1];
+  return validQuotaKey(value)
+    ? { value, isNew: false }
+    : { value: crypto.randomUUID(), isNew: true };
+}
+
+function sessionHeaders(session: { value: string; isNew: boolean }) {
+  const headers = new Headers({ 'Cache-Control': 'no-store' });
+  if (session.isNew) {
+    headers.set(
+      'Set-Cookie',
+      `${sessionCookieName}=${session.value}; HttpOnly; Path=/api/v1/chat; SameSite=Lax; Secure`,
+    );
+  }
+  return headers;
+}
+
+function streamResponse(
+  callback: (
+    controller: ReadableStreamDefaultController<Uint8Array>,
+  ) => Promise<void>,
+  headers: Headers,
+) {
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        try {
+          await callback(controller);
+        } finally {
+          controller.close();
+        }
+      },
+    }),
+    {
+      headers: new Headers({
+        ...Object.fromEntries(headers),
+        'Content-Type': 'text/event-stream; charset=utf-8',
+      }),
+    },
+  );
+}
+
+async function environment() {
+  const { env } = await import('cloudflare:workers');
+  return env;
+}
+
+type ChatDependencies = {
+  answerQuestion: typeof answerQuestion;
+  chatQuotaRemaining: typeof chatQuotaRemaining;
+  consumeChatQuota: typeof consumeChatQuota;
+  getEnvironment: typeof environment;
+  getProviderSettings: typeof getProviderSettings;
 };
 
-export async function POST(request: Request) {
-  let body: unknown;
+const defaultDependencies: ChatDependencies = {
+  answerQuestion,
+  chatQuotaRemaining,
+  consumeChatQuota,
+  getEnvironment: environment,
+  getProviderSettings,
+};
 
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json(
-      { error: 'Send a JSON object with a message.' },
-      { status: 400 },
-    );
-  }
+export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
+  const dependencies = { ...defaultDependencies, ...overrides };
 
-  const message = validateMessage(
-    typeof body === 'object' && body !== null && 'message' in body
-      ? body.message
-      : undefined,
-  );
+  async function GET(request: Request) {
+    const session = sessionId(request);
+    const headers = sessionHeaders(session);
 
-  if (!message) {
-    return Response.json(
-      { error: 'Message must contain 1 to 1200 characters.' },
-      { status: 400 },
-    );
-  }
-
-  const quotaKey =
-    typeof body === 'object' && body !== null && 'quotaKey' in body
-      ? body.quotaKey
-      : undefined;
-  if (!validQuotaKey(quotaKey)) {
-    return Response.json(
-      { error: 'Start a new chat session before sending a message.' },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const { env } = await import('cloudflare:workers');
-    if (
-      !env.QUOTA_HMAC_SECRET ||
-      !(await consumeChatQuota(env.DB, quotaKey, env.QUOTA_HMAC_SECRET))
-    ) {
+    try {
+      const env = await dependencies.getEnvironment();
+      const settings = dependencies.getProviderSettings(env);
+      if (!env.QUOTA_HMAC_SECRET) throw new AssistantConfigurationError();
+      const remaining = await chatQuotaRemaining(
+        env.DB,
+        session.value,
+        env.QUOTA_HMAC_SECRET,
+      );
       return Response.json(
-        { error: 'Chat request limit reached. Please try again tomorrow.' },
-        { status: 429 },
+        {
+          displayName: settings.providers[0].displayName,
+          limit: CHAT_SESSION_LIMIT,
+          remaining,
+        },
+        { headers },
+      );
+    } catch {
+      return Response.json(
+        { error: unavailableMessage },
+        { headers, status: 503 },
       );
     }
-    const answer = await answerQuestion(message);
-    return Response.json({ answer });
-  } catch (error) {
-    const status = error instanceof AssistantConfigurationError ? 503 : 502;
-    console.error(
-      JSON.stringify({ event: 'assistant_request_failed', status }),
-    );
-    return Response.json(unavailableResponse, { status });
   }
+
+  async function POST(request: Request) {
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return Response.json(
+        { error: 'Send a JSON object with a message.' },
+        { status: 400 },
+      );
+    }
+
+    const message = validateMessage(
+      typeof body === 'object' && body !== null && 'message' in body
+        ? body.message
+        : undefined,
+    );
+    if (!message) {
+      return Response.json(
+        { error: 'Message must contain 1 to 1200 characters.' },
+        { status: 400 },
+      );
+    }
+
+    const session = sessionId(request);
+    const headers = sessionHeaders(session);
+
+    try {
+      const env = await dependencies.getEnvironment();
+      const settings = dependencies.getProviderSettings(env);
+      if (
+        !env.QUOTA_HMAC_SECRET ||
+        !(await dependencies.consumeChatQuota(
+          env.DB,
+          session.value,
+          env.QUOTA_HMAC_SECRET,
+        ))
+      ) {
+        return Response.json(
+          {
+            error: 'Your five-question chat session is complete.',
+            limit: CHAT_SESSION_LIMIT,
+            remaining: 0,
+          },
+          { headers, status: 429 },
+        );
+      }
+      const remaining = await dependencies.chatQuotaRemaining(
+        env.DB,
+        session.value,
+        env.QUOTA_HMAC_SECRET,
+      );
+      return streamResponse(async (controller) => {
+        try {
+          const answer = await dependencies.answerQuestion(
+            message,
+            env,
+            fetch,
+            (displayName) => {
+              controller.enqueue(
+                event('status', { displayName, type: 'fallback' }),
+              );
+            },
+          );
+          controller.enqueue(
+            event('answer', {
+              answer,
+              displayName: settings.providers[0].displayName,
+              remaining,
+            }),
+          );
+        } catch (error) {
+          const status =
+            error instanceof AssistantConfigurationError ? 503 : 502;
+          console.error(
+            JSON.stringify({ event: 'assistant_request_failed', status }),
+          );
+          controller.enqueue(
+            event('error', { error: unavailableMessage, remaining }),
+          );
+        }
+      }, headers);
+    } catch (error) {
+      const status = error instanceof AssistantConfigurationError ? 503 : 502;
+      console.error(
+        JSON.stringify({ event: 'assistant_request_failed', status }),
+      );
+      return Response.json({ error: unavailableMessage }, { headers, status });
+    }
+  }
+
+  return { GET, POST };
 }
+
+const handlers = createChatHandlers();
+
+export const GET = handlers.GET;
+export const POST = handlers.POST;
