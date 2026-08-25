@@ -1,17 +1,26 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useSyncExternalStore } from 'react';
+import {
+  cacheAnswer,
+  getCachedAnswer,
+  questionFingerprint,
+} from '@/lib/chat-cache';
 
 const sessionNameKey = 'alterigor-visitor-name';
 const quotaKeyKey = 'alterigor-chat-quota-key';
+const cachedAnswersKey = 'alterigor-chat-answer-cache';
+
+const subscribeToSessionStorage = () => () => {};
 
 type Message = { role: 'assistant' | 'user'; content: string };
 
 export function ChatPanel() {
-  const [name, setName] = useState(() =>
-    typeof window === 'undefined'
-      ? ''
-      : (sessionStorage.getItem(sessionNameKey) ?? ''),
+  const [, setSessionVersion] = useState(0);
+  const name = useSyncExternalStore(
+    subscribeToSessionStorage,
+    () => sessionStorage.getItem(sessionNameKey) ?? '',
+    () => '',
   );
   const [draftName, setDraftName] = useState('');
   const [message, setMessage] = useState('');
@@ -24,7 +33,7 @@ export function ChatPanel() {
     const value = draftName.trim().slice(0, 80);
     if (!value) return;
     sessionStorage.setItem(sessionNameKey, value);
-    setName(value);
+    setSessionVersion((version) => version + 1);
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -40,6 +49,21 @@ export function ChatPanel() {
     setError('');
     setIsSending(true);
     try {
+      const fingerprint = await questionFingerprint(question);
+      const cachedAnswer = getCachedAnswer(
+        sessionStorage,
+        cachedAnswersKey,
+        fingerprint,
+      );
+      if (cachedAnswer) {
+        setMessages(
+          [
+            ...nextMessages,
+            { content: cachedAnswer, role: 'assistant' as const },
+          ].slice(-6),
+        );
+        return;
+      }
       const quotaKey =
         sessionStorage.getItem(quotaKeyKey) ?? crypto.randomUUID();
       sessionStorage.setItem(quotaKeyKey, quotaKey);
@@ -53,6 +77,7 @@ export function ChatPanel() {
         error?: string;
       };
       if (!response.ok || !body.answer) throw new Error(body.error);
+      cacheAnswer(sessionStorage, cachedAnswersKey, fingerprint, body.answer);
       setMessages(
         [
           ...nextMessages,

@@ -1,4 +1,5 @@
 const DAILY_LIMIT = 20;
+const CONTACT_DAILY_LIMIT = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export function validQuotaKey(value: unknown): value is string {
@@ -24,27 +25,51 @@ async function keyHash(value: string, secret: string): Promise<string> {
   ).join('');
 }
 
-export async function consumeChatQuota(
+async function consumeQuota(
   database: D1Database,
   quotaKey: string,
   secret: string,
+  table: 'chat_quota' | 'contact_quota',
+  limit: number,
 ): Promise<boolean> {
   const bucket = new Date().toISOString().slice(0, 10);
   const hash = await keyHash(quotaKey, secret);
   await database
     .prepare(
-      'CREATE TABLE IF NOT EXISTS chat_quota (bucket TEXT NOT NULL, key_hash TEXT NOT NULL, count INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (bucket, key_hash))',
+      `CREATE TABLE IF NOT EXISTS ${table} (bucket TEXT NOT NULL, key_hash TEXT NOT NULL, count INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (bucket, key_hash))`,
     )
     .run();
   await database
-    .prepare('DELETE FROM chat_quota WHERE updated_at < ?')
+    .prepare(`DELETE FROM ${table} WHERE updated_at < ?`)
     .bind(Date.now() - DAY_MS)
     .run();
   const result = await database
     .prepare(
-      'INSERT INTO chat_quota (bucket, key_hash, count, updated_at) VALUES (?, ?, 1, ?) ON CONFLICT(bucket, key_hash) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at RETURNING count',
+      `INSERT INTO ${table} (bucket, key_hash, count, updated_at) VALUES (?, ?, 1, ?) ON CONFLICT(bucket, key_hash) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at RETURNING count`,
     )
     .bind(bucket, hash, Date.now())
     .first<{ count: number }>();
-  return Boolean(result && result.count <= DAILY_LIMIT);
+  return Boolean(result && result.count <= limit);
+}
+
+export async function consumeChatQuota(
+  database: D1Database,
+  quotaKey: string,
+  secret: string,
+): Promise<boolean> {
+  return consumeQuota(database, quotaKey, secret, 'chat_quota', DAILY_LIMIT);
+}
+
+export async function consumeContactQuota(
+  database: D1Database,
+  networkAddress: string,
+  secret: string,
+): Promise<boolean> {
+  return consumeQuota(
+    database,
+    networkAddress,
+    secret,
+    'contact_quota',
+    CONTACT_DAILY_LIMIT,
+  );
 }

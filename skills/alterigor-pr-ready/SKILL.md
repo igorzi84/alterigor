@@ -5,14 +5,25 @@ description: Prepare AlterIgor changes for a pull request by running its safety 
 
 # AlterIgor PR Ready
 
-Prepare the current AlterIgor branch for review. Do not change application files
-while using this skill unless the user separately asks for a fix.
+Prepare the current AlterIgor branch for review. When the user explicitly
+invokes this skill, you may make the smallest local code or test changes needed
+to clear a blocking finding, then rerun the safety gate and readiness checks.
+Before making such a fix, state the blocker and intended correction.
+
+Do not automatically change product scope, add a dependency, create an account,
+configure a credential, send a notification, deploy, commit, push, open a PR,
+or merge. Stop and ask for direction when clearing a blocker requires any of
+those actions or a material design choice.
 
 ## Safety gate
 
 Run `$alterigor-ai-safety-review` first against the current diff. If it reports
 a blocking finding, stop before committing, pushing, opening, or merging a PR.
 Report the blocker and the verification needed to clear it.
+
+For a local, in-scope blocking defect, implement the minimal correction and its
+focused tests, then repeat the safety gate. Do not proceed to Git or GitHub
+actions while any blocking finding remains.
 
 ## Readiness checks
 
