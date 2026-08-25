@@ -134,8 +134,9 @@ one-question fallback accounting, and no provider call after the session limit.
   decline.
 - Add a server-side Telegram notifier using `TELEGRAM_BOT_TOKEN` and
   `TELEGRAM_CHAT_ID` runtime secrets. Notify for qualified events, with a
-  deduplicated first-visit alert and immediate contact-submission alert; do not
-  forward contact email addresses or message content to Telegram.
+  deduplicated first-visit alert for every browser session and generic alerts
+  for accepted interactions; do not forward contact email addresses or message
+  content to Telegram.
 - Make notification delivery non-blocking: a Telegram or D1 failure must not
   affect the portfolio, chat, or contact submission. Record only safe,
   structured operational failure data.

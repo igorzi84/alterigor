@@ -19,7 +19,7 @@ type InsightEnvironment = {
 };
 
 export type InsightRequest = {
-  consent: true;
+  consent?: true;
   event: InsightEvent;
   sessionId: string;
 };
@@ -50,13 +50,17 @@ async function sessionHash(value: string, secret: string): Promise<string> {
 export function validateInsightRequest(value: unknown): InsightRequest | null {
   if (typeof value !== 'object' || value === null) return null;
   const request = value as Record<string, unknown>;
-  return request.consent === true &&
+  const event = request.event as InsightEvent;
+  const permitted =
+    request.consent === true ||
+    (event === 'first_visit' && request.consent === undefined);
+  return permitted &&
     validSessionId(request.sessionId) &&
     typeof request.event === 'string' &&
-    INSIGHT_EVENTS.includes(request.event as InsightEvent)
+    INSIGHT_EVENTS.includes(event)
     ? {
-        consent: true,
-        event: request.event as InsightEvent,
+        ...(request.consent === true ? { consent: true } : {}),
+        event,
         sessionId: request.sessionId,
       }
     : null;
@@ -90,7 +94,7 @@ export async function recordInsight(
 }
 
 export async function notifyTelegram(
-  event: Extract<InsightEvent, 'first_visit' | 'contact_submission'>,
+  event: InsightEvent,
   environment: InsightEnvironment,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<void> {
@@ -103,10 +107,7 @@ export async function notifyTelegram(
       {
         body: JSON.stringify({
           chat_id: chatId,
-          text:
-            event === 'first_visit'
-              ? 'AlterIgor: a new visitor opted in to anonymous metrics.'
-              : 'AlterIgor: a contact form message was delivered.',
+          text: telegramMessage(event),
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -118,13 +119,26 @@ export async function notifyTelegram(
   }
 }
 
+function telegramMessage(event: InsightEvent): string {
+  const messages: Record<InsightEvent, string> = {
+    first_visit: 'AlterIgor: a new anonymous browser session visited the site.',
+    chat_start: 'AlterIgor: an anonymous visitor started chat.',
+    github_click: 'AlterIgor: an anonymous visitor clicked GitHub.',
+    linkedin_click: 'AlterIgor: an anonymous visitor clicked LinkedIn.',
+    contact_start: 'AlterIgor: an anonymous visitor started the contact form.',
+    contact_submission:
+      'AlterIgor: an anonymous visitor submitted the contact form.',
+  };
+  return messages[event];
+}
+
 export async function recordInsightSafely(
   request: InsightRequest,
   environment: InsightEnvironment,
 ): Promise<void> {
   try {
     const inserted = await recordInsight(request, environment);
-    if (inserted && request.event === 'first_visit') {
+    if (inserted && (request.event === 'first_visit' || request.consent)) {
       void notifyTelegram(request.event, environment);
     }
   } catch {

@@ -31,9 +31,21 @@ function fakeDatabase() {
 }
 
 describe('visitor insights', () => {
-  it('accepts only allowlisted, consented anonymous events', () => {
+  it('accepts an essential first-visit alert and only consented optional events', () => {
     expect(validateInsightRequest(request)).toEqual(request);
+    expect(
+      validateInsightRequest({
+        event: 'first_visit',
+        sessionId: request.sessionId,
+      }),
+    ).toEqual({ event: 'first_visit', sessionId: request.sessionId });
     expect(validateInsightRequest({ ...request, consent: false })).toBeNull();
+    expect(
+      validateInsightRequest({
+        event: 'chat_start',
+        sessionId: request.sessionId,
+      }),
+    ).toBeNull();
     expect(
       validateInsightRequest({ ...request, event: 'page_view' }),
     ).toBeNull();
@@ -57,12 +69,12 @@ describe('visitor insights', () => {
     expect(database.prepared.join('\n')).not.toContain(request.sessionId);
   });
 
-  it('does not include visitor data in Telegram notifications', async () => {
+  it('sends anonymous interaction labels without visitor data to Telegram', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(null, { status: 200 }));
     await notifyTelegram(
-      'contact_submission',
+      'chat_start',
       {
         DB: {} as D1Database,
         TELEGRAM_BOT_TOKEN: 'bot-token',
@@ -71,7 +83,7 @@ describe('visitor insights', () => {
       fetchMock,
     );
     const body = String(fetchMock.mock.calls[0][1]?.body);
-    expect(body).toContain('contact form message was delivered');
+    expect(body).toContain('anonymous visitor started chat');
     expect(body).not.toContain('email');
     expect(body).not.toContain('message content');
   });

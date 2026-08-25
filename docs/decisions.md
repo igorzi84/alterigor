@@ -1,5 +1,20 @@
 # Architecture decisions
 
+## 2026-08-25 — Anonymous unique-visit alerts are essential notifications
+
+**Decision:** Send one generic Telegram notification for each new browser
+session, even when a visitor declines optional interaction metrics. Use the
+same short-lived HMAC-hashed session identifier to deduplicate the alert and
+delete its record after 30 days. Keep chat, link, and contact-start metrics
+behind the opt-in choice, and send a generic Telegram alert for each accepted
+interaction.
+
+**Rationale:** Igor needs a minimal signal that the portfolio is being visited;
+the alert contains no identity, content, IP address, or browsing profile.
+
+**Non-goals:** Identifying people, tracking across sessions or sites, measuring
+declined interactions, or adding visitor profiles.
+
 ## 2026-08-25 — Manual deployed-chat evaluation, not credentialed CI
 
 **Decision:** Keep the compact chat evaluation set version-controlled, but run
