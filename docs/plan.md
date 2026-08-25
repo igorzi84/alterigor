@@ -37,8 +37,10 @@ come from approved public content.
 ## PR 3 — Provider-neutral chatbot
 
 - Add a server-side chat endpoint using an OpenAI-compatible model adapter.
-- Read `LLM_API_KEY`, `LLM_BASE_URL`, and `LLM_MODEL` only from `.env` locally
-  or Sites runtime secrets in production.
+- Read `LLM_PROVIDERS` and only the provider-key secrets it references from
+  `.env` locally or Sites runtime secrets in production. The ordered list uses
+  OpenAI-compatible endpoints and model IDs, so no provider is built into the
+  application.
 - Load `ALTERIGOR_EXTENDED_PROFILE` only on the server. It may contain
   public-on-request facts such as location and hobbies, but nothing
   confidential.
@@ -92,10 +94,10 @@ and the public site has verified graceful failure states.
 - Add a non-consuming chat-status response so the UI can show the exact
   `N of 5 questions left` value at session start, after a new request, and
   after a page reload. Reused exact-question answers do not consume a request.
-- Add a non-secret `LLM_DISPLAY_NAME` runtime setting. Return only this
-  explicitly approved public label to the browser; never expose `LLM_MODEL`,
-  provider base URL, API key, or other provider configuration. While a request
-  is in progress, show `Trying {LLM_DISPLAY_NAME}…`.
+- Configure a public display label per `LLM_PROVIDERS` entry. Return only this
+  explicitly approved label to the browser; never expose model IDs, provider
+  URLs, API keys, or other provider configuration. While a request is in
+  progress, show `Trying {display name}…`.
 - Configure an ordered, server-only fallback list with an explicitly approved
   public display label for each model. When the active provider returns an
   eligible limit or capacity response, stream a server-confirmed status event
@@ -147,9 +149,10 @@ kept, and how visitors can decline optional measurement.
 
 - The LLM provider is configured through an OpenAI-compatible interface so a
   free-tier provider can change without product rewrites.
-- `LLM_DISPLAY_NAME` is a deliberately public, human-readable model label used
-  by the chat UI. It may name the selected model, but it is independent from
-  the server-only provider configuration and contains no credential or endpoint.
+- Each `LLM_PROVIDERS` entry includes a deliberately public, human-readable
+  `displayName` used by the chat UI. It may name the selected model, but is
+  independent from the server-only provider configuration and contains no
+  credential or endpoint.
 - Resend is the initial contact-form provider.
 - Telegram is the initial private notification channel for qualified visitor
   engagement events. It receives no contact email address or message content.

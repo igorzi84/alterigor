@@ -7,9 +7,9 @@ server-side with the existing D1 HMAC-hashed session key. Return a
 non-consuming remaining-count status so the UI can show the exact number of
 questions left. Keep exact-repeat answer reuse in browser-session storage.
 
-Expose only `LLM_DISPLAY_NAME`, an explicitly configured public label, to the
-chat UI. The UI shows `Trying {LLM_DISPLAY_NAME}…` while a new request is in
-progress. It does not expose `LLM_MODEL`, the provider URL, or credentials.
+Expose only each configured provider's public `displayName` to the chat UI. The
+UI shows `Trying {display name}…` while a new request is in progress. It does
+not expose model IDs, provider URLs, or credentials.
 
 **Rationale:** Five requests make expected usage and cost easy to understand
 while preserving the existing fail-closed server boundary. A display label
@@ -39,3 +39,12 @@ requests.
 **Non-goals:** Automatic fallback for every error, unbounded retries, exposing
 provider errors or configuration, and recording fallback events with question
 content.
+
+**Implementation note:** The browser never owns or sends the quota identifier.
+The chat route creates a session-only, HttpOnly cookie and HMAC-hashes that
+opaque UUID before D1 use. `LLM_PROVIDERS` is a server-only ordered JSON array
+of up to three `{ baseUrl, model, displayName, apiKeyEnv }` entries. The first
+provider is primary; the rest are bounded fallbacks. `apiKeyEnv` identifies a
+separate runtime secret, which keeps credentials out of JSON and makes the
+adapter provider-agnostic across OpenAI-compatible APIs. Only configured public
+display names are sent to the browser.

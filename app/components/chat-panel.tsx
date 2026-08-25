@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState, useSyncExternalStore } from 'react';
+import { FormEvent, useEffect, useState, useSyncExternalStore } from 'react';
 import {
   cacheAnswer,
   getCachedAnswer,
@@ -8,15 +8,29 @@ import {
 } from '@/lib/chat-cache';
 
 const sessionNameKey = 'alterigor-visitor-name';
-const quotaKeyKey = 'alterigor-chat-quota-key';
 const cachedAnswersKey = 'alterigor-chat-answer-cache';
+const unavailableMessage =
+  'The portfolio assistant is temporarily unavailable. Please try again later.';
 
 const subscribeToSessionStorage = () => () => {};
 
 type Message = { role: 'assistant' | 'user'; content: string };
+type ChatStatus = { displayName: string; limit: number; remaining: number };
+
+function parseEvent(block: string): { name: string; data: unknown } | null {
+  const lines = block.split('\n');
+  const name = lines.find((line) => line.startsWith('event: '))?.slice(7);
+  const data = lines.find((line) => line.startsWith('data: '))?.slice(6);
+  if (!name || !data) return null;
+  try {
+    return { name, data: JSON.parse(data) };
+  } catch {
+    return null;
+  }
+}
 
 export function ChatPanel() {
-  const [, setSessionVersion] = useState(0);
+  const [sessionVersion, setSessionVersion] = useState(0);
   const name = useSyncExternalStore(
     subscribeToSessionStorage,
     () => sessionStorage.getItem(sessionNameKey) ?? '',
@@ -27,6 +41,26 @@ export function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [status, setStatus] = useState<ChatStatus | null>(null);
+  const [providerStatus, setProviderStatus] = useState('');
+
+  useEffect(() => {
+    if (!name) return;
+    void fetch('/api/v1/chat')
+      .then(async (response) => {
+        if (!response.ok) throw new Error();
+        const data = (await response.json()) as ChatStatus;
+        if (
+          typeof data.displayName !== 'string' ||
+          typeof data.limit !== 'number' ||
+          typeof data.remaining !== 'number'
+        ) {
+          throw new Error();
+        }
+        setStatus(data);
+      })
+      .catch(() => setError(unavailableMessage));
+  }, [name, sessionVersion]);
 
   function startChat(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,7 +73,7 @@ export function ChatPanel() {
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const question = message.trim();
-    if (!question || isSending) return;
+    if (!question || isSending || status?.remaining === 0) return;
     const nextMessages: Message[] = [
       ...messages,
       { content: question, role: 'user' as const },
@@ -64,32 +98,97 @@ export function ChatPanel() {
         );
         return;
       }
-      const quotaKey =
-        sessionStorage.getItem(quotaKeyKey) ?? crypto.randomUUID();
-      sessionStorage.setItem(quotaKeyKey, quotaKey);
+      if (status) setProviderStatus(`Trying ${status.displayName}…`);
       const response = await fetch('/api/v1/chat', {
-        body: JSON.stringify({ message: question, quotaKey }),
+        body: JSON.stringify({ message: question }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       });
-      const body = (await response.json()) as {
-        answer?: string;
-        error?: string;
-      };
-      if (!response.ok || !body.answer) throw new Error(body.error);
-      cacheAnswer(sessionStorage, cachedAnswersKey, fingerprint, body.answer);
-      setMessages(
-        [
-          ...nextMessages,
-          { content: body.answer, role: 'assistant' as const },
-        ].slice(-6),
-      );
+      if (!response.ok || !response.body) {
+        const body = (await response.json()) as {
+          error?: string;
+          remaining?: number;
+        };
+        if (typeof body.remaining === 'number' && status) {
+          setStatus({ ...status, remaining: body.remaining });
+        }
+        throw new Error(body.error);
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let answered = false;
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() ?? '';
+        for (const block of blocks) {
+          const parsed = parseEvent(block);
+          if (
+            !parsed ||
+            typeof parsed.data !== 'object' ||
+            parsed.data === null
+          )
+            continue;
+          const data = parsed.data as {
+            answer?: string;
+            displayName?: string;
+            error?: string;
+            remaining?: number;
+            type?: string;
+          };
+          if (
+            parsed.name === 'status' &&
+            data.type === 'fallback' &&
+            data.displayName
+          ) {
+            setStatus((current) =>
+              current
+                ? { ...current, displayName: data.displayName! }
+                : current,
+            );
+            setProviderStatus(
+              `Model limit reached. Trying ${data.displayName}…`,
+            );
+          }
+          if (typeof data.remaining === 'number' && status) {
+            setStatus({ ...status, remaining: data.remaining });
+          }
+          if (parsed.name === 'answer' && data.answer) {
+            answered = true;
+            if (data.displayName) {
+              setStatus((current) =>
+                current
+                  ? { ...current, displayName: data.displayName! }
+                  : current,
+              );
+            }
+            cacheAnswer(
+              sessionStorage,
+              cachedAnswersKey,
+              fingerprint,
+              data.answer,
+            );
+            setMessages(
+              [
+                ...nextMessages,
+                { content: data.answer, role: 'assistant' as const },
+              ].slice(-6),
+            );
+          }
+          if (parsed.name === 'error') throw new Error(data.error);
+        }
+        if (done) break;
+      }
+      if (!answered) throw new Error();
     } catch {
       setError(
         'The assistant is temporarily unavailable. Please try again later.',
       );
     } finally {
       setIsSending(false);
+      setProviderStatus('');
     }
   }
 
@@ -122,6 +221,9 @@ export function ChatPanel() {
       <p className="text-sm text-slate-300">
         Hi {name}. Ask about Igor&apos;s platform engineering work.
       </p>
+      {status ? (
+        <p className="mt-2 text-sm text-cyan-200">Using {status.displayName}</p>
+      ) : null}
       <div className="mt-4 space-y-3" aria-live="polite">
         {messages.map((item, index) => (
           <p
@@ -150,7 +252,7 @@ export function ChatPanel() {
         />
         <button
           className="rounded-lg bg-cyan-300 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50"
-          disabled={isSending}
+          disabled={isSending || status?.remaining === 0}
           type="submit"
         >
           {isSending ? 'Sending…' : 'Send'}
@@ -159,6 +261,21 @@ export function ChatPanel() {
       {error ? (
         <p className="mt-3 text-sm text-rose-300" role="alert">
           {error}
+        </p>
+      ) : null}
+      {providerStatus ? (
+        <p className="mt-3 text-sm text-cyan-200" role="status">
+          {providerStatus}
+        </p>
+      ) : null}
+      {status ? (
+        <p className="mt-3 text-sm text-slate-300">
+          {status.remaining} of {status.limit} questions left
+        </p>
+      ) : null}
+      {status?.remaining === 0 ? (
+        <p className="mt-3 text-sm text-amber-200" role="status">
+          Your five-question chat session is complete.
         </p>
       ) : null}
       <p className="mt-3 text-xs text-slate-400">
