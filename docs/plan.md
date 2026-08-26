@@ -146,6 +146,46 @@ deduplication, redaction of personal data, retention cleanup, and graceful D1
 and Telegram failures. The UI explains what is measured, why, how long it is
 kept, and how visitors can decline optional measurement.
 
+## PR 9 — Friendly chat voice and example questions
+
+- Update the server-side assistant instruction so answers are clear,
+  professional, and lightly humorous when it genuinely fits the visitor's
+  question. Use occasional dry, kind humor rather than jokes in every answer;
+  the humor must not obscure an answer, make claims, or target a person or
+  group.
+- Keep unsupported, privacy, prompt-injection, rate-limit, and unavailable
+  responses direct, calm, and unambiguous. These boundary responses may be warm
+  but must not be jokey.
+- Add accessible example-question buttons below the chat greeting. Selecting a
+  question places its exact text in the composer; it does not send a request or
+  consume one of the five session questions. The examples are:
+  - `What kind of platform engineering work does Igor do?`
+  - `How has Igor used Kubernetes in his work?`
+  - `Can you explain Igor's GitOps project?`
+  - `What does the certificate orchestration service do?`
+  - `Which technologies does Igor use for observability?`
+- Keep the question set version-controlled alongside the approved portfolio
+  knowledge. Review it whenever that knowledge changes, so an example cannot
+  invite an answer beyond the published facts.
+
+**Intended outcome:** Visitors immediately see useful, grounded ways to start
+a conversation and receive answers that sound like a helpful human, not a
+manual.
+
+**Non-goals:** A comedy persona, personalized humor based on visitor data,
+semantic question suggestions, additional model requests, or any new data
+collection.
+
+**Failure behavior and privacy:** If chat is unavailable, examples remain
+visible but show the existing generic unavailable state when submitted. Example
+selection stays entirely in the browser session and is neither logged nor
+stored server-side.
+
+**Acceptance:** Focused tests prove examples are grounded in approved content,
+do not auto-submit or change the quota, and remain keyboard accessible. Prompt
+tests prove the requested tone is present while unsupported and safety-boundary
+answers remain explicit and factual.
+
 ## Configuration decisions
 
 - The LLM provider is configured through an OpenAI-compatible interface so a
