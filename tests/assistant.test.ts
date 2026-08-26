@@ -28,6 +28,7 @@ describe('assistant provider', () => {
       new Response(
         JSON.stringify({
           choices: [{ message: { content: 'Grounded answer.' } }],
+          model: 'openai/gpt-oss-20b:free',
         }),
         { status: 200 },
       ),
@@ -39,7 +40,10 @@ describe('assistant provider', () => {
         environment,
         fetchMock,
       ),
-    ).resolves.toBe('Grounded answer.');
+    ).resolves.toEqual({
+      answer: 'Grounded answer.',
+      model: 'openai/gpt-oss-20b:free',
+    });
 
     const [url, request] = fetchMock.mock.calls[0];
     expect(url).toBe('https://provider.example/v1/chat/completions');
@@ -78,6 +82,22 @@ describe('assistant provider', () => {
     await expect(answerQuestion('Hello', {})).rejects.toBeInstanceOf(
       AssistantConfigurationError,
     );
+  });
+
+  it('does not expose malformed provider model metadata', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'Grounded answer.' } }],
+          model: 'model\nwith-untrusted-metadata',
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await expect(
+      answerQuestion('Hello', environment, fetchMock),
+    ).resolves.toEqual({ answer: 'Grounded answer.' });
   });
 
   it('uses a configured fallback only after a capacity response', async () => {
@@ -120,7 +140,7 @@ describe('assistant provider', () => {
           transitions.push(displayName);
         },
       ),
-    ).resolves.toBe('Fallback answer.');
+    ).resolves.toEqual({ answer: 'Fallback answer.' });
 
     expect(transitions).toEqual(['Backup model']);
     expect(fetchMock.mock.calls[1][0]).toBe(
