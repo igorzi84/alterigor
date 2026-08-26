@@ -6,6 +6,7 @@ import {
   getCachedAnswer,
   questionFingerprint,
 } from '@/lib/chat-cache';
+import { profile } from '@/content/profile';
 import { useInsights } from './insights';
 
 const sessionNameKey = 'alterigor-visitor-name';
@@ -227,6 +228,26 @@ export function ChatPanel() {
       {status ? (
         <p className="mt-2 text-sm text-cyan-200">Using {status.displayName}</p>
       ) : null}
+      <div className="mt-4" aria-labelledby="example-questions-heading">
+        <p
+          className="text-sm font-medium text-slate-200"
+          id="example-questions-heading"
+        >
+          Try a question
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {profile.exampleQuestions.map((question) => (
+            <button
+              className="rounded-full border border-slate-600 px-3 py-1.5 text-left text-sm text-slate-200 transition hover:border-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+              key={question}
+              onClick={() => setMessage(question)}
+              type="button"
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="mt-4 space-y-3" aria-live="polite">
         {messages.map((item, index) => (
           <p

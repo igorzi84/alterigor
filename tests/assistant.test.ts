@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   AssistantConfigurationError,
+  ASSISTANT_TEMPERATURE,
   answerQuestion,
   MAX_MESSAGE_CHARACTERS,
   validateMessage,
@@ -48,13 +49,19 @@ describe('assistant provider', () => {
     expect(JSON.parse(request?.body as string)).toMatchObject({
       max_completion_tokens: 400,
       model: 'free-model',
-      temperature: 0,
+      temperature: ASSISTANT_TEMPERATURE,
     });
     const requestBody = JSON.parse(request?.body as string) as {
       messages: Array<{ content: string }>;
     };
     expect(requestBody.messages[0].content).toContain(
       'Do not invent, infer, or\nexaggerate',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'at most one light,\nkind, dry aside',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'be direct, calm, and non-jokey',
     );
     expect(requestBody.messages[0].content).toContain(
       'Microservice Deployment with Helm, Kustomize, and Argo CD',

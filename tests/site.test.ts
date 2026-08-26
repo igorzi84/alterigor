@@ -21,6 +21,16 @@ describe('site metadata', () => {
     });
   });
 
+  it('keeps example questions grounded in the public portfolio profile', () => {
+    expect(profile.exampleQuestions).toEqual([
+      'What kind of platform engineering work does Igor do?',
+      'How has Igor used Kubernetes in his work?',
+      "Can you explain Igor's GitOps project?",
+      'What does the certificate orchestration service do?',
+      'Which technologies does Igor use for observability?',
+    ]);
+  });
+
   it('does not require a public deployment URL during local development', () => {
     expect(site.title).toContain('Platform Engineering Portfolio');
   });
