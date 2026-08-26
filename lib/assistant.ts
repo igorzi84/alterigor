@@ -1,4 +1,5 @@
 import { profile } from '@/content/profile';
+import { additionalChatKnowledge } from '@/content/public-chat-knowledge';
 
 const MAX_ANSWER_CHARACTERS = 1_600;
 export const MAX_COMPLETION_TOKENS = 400;
@@ -145,6 +146,8 @@ function publicKnowledge(): string {
     projects,
     'Experience:',
     experience,
+    'Additional approved professional context:',
+    ...additionalChatKnowledge.map((fact) => `- ${fact}`),
   ].join('\n');
 }
 

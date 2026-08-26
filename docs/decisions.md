@@ -1,5 +1,21 @@
 # Architecture decisions
 
+## 2026-08-26 — Curate public chat knowledge separately from repository analysis
+
+**Decision:** Load only a short, version-controlled module of reviewed public
+professional facts in addition to the portfolio profile. Do not load the
+repository-derived professional-skill report or the CV automatically.
+
+**Rationale:** Repository analysis is useful source material, but it can expose
+internal system names, vendor integrations, incident details, authorship
+metadata, or unsupported inferences when treated as public chatbot context.
+The curated module improves technical answers while keeping every disclosed
+fact easy to review.
+
+**Non-goals:** Publishing source-repository evidence, adding provider or
+internal architecture details, using the assistant to reveal interview notes,
+or turning the CV into unrestricted chatbot context.
+
 ## 2026-08-26 — Light humor is a constrained presentation layer
 
 **Decision:** Give ordinary, supported portfolio answers a warm, concise voice

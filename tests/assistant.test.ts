@@ -66,6 +66,12 @@ describe('assistant provider', () => {
     expect(requestBody.messages[0].content).toContain(
       'Microservice Deployment with Helm, Kustomize, and Argo CD',
     );
+    expect(requestBody.messages[0].content).toContain(
+      'TLS/PKI certificate lifecycle automation',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'Additional approved professional context:',
+    );
   });
 
   it('rejects missing provider configuration without exposing a secret', async () => {
