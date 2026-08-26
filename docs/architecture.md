@@ -3,7 +3,9 @@
 ## Purpose and boundary
 
 AlterIgor is a portfolio site with a limited-knowledge assistant. Its approved
-knowledge is the version-controlled public profile and CV. The optional
+knowledge is the version-controlled public profile and the small,
+reviewed `public-chat-knowledge.ts` module. The CV remains a public reference
+artifact but is not loaded automatically. The optional
 `ALTERIGOR_EXTENDED_PROFILE` runtime value may contain only public-on-request
 facts. Unsupported questions receive a concise uncertainty response and a
 contact path; the assistant does not browse, act on systems, or claim to be

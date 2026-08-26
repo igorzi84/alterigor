@@ -5,17 +5,18 @@ Vaughan, ON | igor@zilberman.ca
 
 ## Summary
 
-Senior DevOps and Platform Engineer with 15+ years of experience building and operating cloud infrastructure, CI/CD systems, Kubernetes platforms, backend infrastructure services, and production automation for large-scale distributed systems. Strong hands-on background across AWS, GCP, and Azure, with recent work focused on Python/FastAPI services, Temporal workflows, GitOps deployments, Terraform, Helm, Prometheus/Grafana observability, and reliable operations for Redis Enterprise cloud platforms.
+Senior DevOps and Platform Engineer with 15+ years of experience building and operating cloud infrastructure, CI/CD systems, Kubernetes platforms, backend infrastructure services, and production automation for large-scale distributed systems. Strong hands-on background across AWS, GCP, and Azure, with recent work focused on Python/FastAPI services, Temporal workflows, GitOps deployments, Terraform, Helm, Prometheus/Grafana observability, TLS/PKI certificate lifecycle automation, and reliable operations for Redis Enterprise cloud platforms.
 
 ## Core Skills
 
 - **Cloud and Platform:** AWS, GCP, Azure, Kubernetes, Docker, Helm, Linux, networking, multi-cloud operations
 - **CI/CD and GitOps:** GitHub Actions, Jenkins, build and release pipelines, ArgoCD, LaunchDarkly, deployment automation
 - **Infrastructure as Code:** Terraform, Ansible, Chef, SOPS, GCP KMS, secrets handling, environment promotion
+- **Security and Certificate Automation:** TLS/PKI, X.509, mutual TLS, certificate lifecycle automation, secure configuration
 - **Backend Engineering:** Python, FastAPI, TypeScript, Node.js, REST APIs, Pydantic, aiohttp, Redis
 - **Reliability and Observability:** Prometheus, Grafana, OpenTelemetry, Tempo, Kibana/OpenSearch, alerting, incident response
 - **Workflow Automation:** Temporal workflows, activities, schedules, workers, retries, queue-depth scaling, KEDA
-- **Testing and Quality:** pytest, Jest, mypy, pylint, pre-commit, e2e test automation
+- **Testing and Quality:** pytest, Jest, Temporal workflow replay tests, mypy, pylint, pre-commit, e2e test automation
 
 ## Selected Projects
 
@@ -24,6 +25,7 @@ Senior DevOps and Platform Engineer with 15+ years of experience building and op
 - Designed and built a Python/FastAPI service for automated TLS certificate lifecycle management using durable workflow orchestration.
 - Implemented workflows for certificate issuance, domain claims, expiry scans, and schedule reconciliation across a large cloud platform.
 - Added reliability controls including idempotent workflow reuse, retry handling, continue-as-new behavior, bounded concurrency, and stale schedule cleanup.
+- Added deterministic workflow replay tests alongside unit, integration, and end-to-end coverage to protect long-running workflow changes.
 - Deployed the service through Helm and GitOps with separate API and worker components, Kubernetes health probes, mutual TLS, encrypted secrets, and environment-specific promotion.
 - Implemented Prometheus metrics, distributed tracing, structured service metadata, actionable alerts, and queue-depth-based worker scaling.
 
