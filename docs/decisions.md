@@ -1,5 +1,22 @@
 # Architecture decisions
 
+## 2026-08-26 — Light humor is a constrained presentation layer
+
+**Decision:** Give ordinary, supported portfolio answers a warm, concise voice
+with occasional dry, kind humor when it fits. Keep refusals, safety boundaries,
+privacy boundaries, rate limits, and unavailable states clear and non-jokey.
+Show five fixed example questions derived from approved portfolio content;
+selecting one fills the composer but does not submit it.
+
+**Rationale:** A little personality makes the assistant more inviting without
+weakening its credibility, truthfulness, or safety messaging. Fixed questions
+provide a useful starting point without collecting extra data or using a model
+to generate suggestions.
+
+**Non-goals:** A comedy character, humor based on visitor identity or message
+content, automatic sending, personalized recommendations, or a new analytics
+event.
+
 ## 2026-08-25 — Anonymous unique-visit alerts are essential notifications
 
 **Decision:** Send one generic Telegram notification for each new browser
