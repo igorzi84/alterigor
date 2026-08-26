@@ -23,11 +23,17 @@ type AssistantSettings = {
 };
 
 type OpenAiCompatibleResponse = {
+  model?: unknown;
   choices?: Array<{
     message?: {
       content?: string | null;
     };
   }>;
+};
+
+export type AssistantAnswer = {
+  answer: string;
+  model?: string;
 };
 
 export class AssistantConfigurationError extends Error {}
@@ -180,7 +186,7 @@ export async function answerQuestion(
   environment: ProviderEnvironment = process.env as ProviderEnvironment,
   fetchImplementation: typeof fetch = fetch,
   onFallback?: (displayName: string) => void | Promise<void>,
-): Promise<string> {
+): Promise<AssistantAnswer> {
   const settings = getProviderSettings(environment);
   const providers = settings.providers;
 
@@ -230,7 +236,16 @@ export async function answerQuestion(
         );
       }
 
-      return answer.slice(0, MAX_ANSWER_CHARACTERS);
+      const selectedModel =
+        typeof payload.model === 'string' &&
+        /^[a-zA-Z0-9._:/-]{1,160}$/.test(payload.model)
+          ? payload.model
+          : undefined;
+
+      return {
+        answer: answer.slice(0, MAX_ANSWER_CHARACTERS),
+        model: selectedModel,
+      };
     } catch (error) {
       if (
         error instanceof AssistantProviderError &&

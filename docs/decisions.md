@@ -126,3 +126,23 @@ provider is primary; the rest are bounded fallbacks. `apiKeyEnv` identifies a
 separate runtime secret, which keeps credentials out of JSON and makes the
 adapter provider-agnostic across OpenAI-compatible APIs. Only configured public
 display names are sent to the browser.
+
+## 2026-08-26 — Public OpenRouter and selected-model status
+
+**Decision:** When a provider returns a model identifier in its successful
+OpenAI-compatible response, include that identifier with the chat answer and
+show it beside the configured public provider label. The production label will
+identify OpenRouter and its free-model router.
+
+**Rationale:** OpenRouter's free router selects an available free model per
+request. Showing the provider and the returned model makes that variability
+clear without claiming that a configured router name is the model that
+answered.
+
+**Privacy and safety:** Only a short, slug-shaped model identifier returned in
+a successful response is exposed. Provider URLs, API keys, request content,
+raw provider errors, and any model identifier from a failed request remain
+server-only.
+
+**Non-goals:** Listing provider configuration, revealing routing rules, or
+persisting model choices with visitor data.

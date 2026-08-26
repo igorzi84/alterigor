@@ -176,7 +176,7 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
       return streamResponse(async (controller) => {
         let activeDisplayName = settings.providers[0].displayName;
         try {
-          const answer = await dependencies.answerQuestion(
+          const result = await dependencies.answerQuestion(
             message,
             env,
             fetch,
@@ -189,8 +189,9 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
           );
           controller.enqueue(
             event('answer', {
-              answer,
+              answer: result.answer,
               displayName: activeDisplayName,
+              model: result.model,
               remaining,
             }),
           );

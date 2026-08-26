@@ -17,7 +17,12 @@ const unavailableMessage =
 const subscribeToSessionStorage = () => () => {};
 
 type Message = { role: 'assistant' | 'user'; content: string };
-type ChatStatus = { displayName: string; limit: number; remaining: number };
+type ChatStatus = {
+  displayName: string;
+  limit: number;
+  model?: string;
+  remaining: number;
+};
 
 function parseEvent(block: string): { name: string; data: unknown } | null {
   const lines = block.split('\n');
@@ -139,6 +144,7 @@ export function ChatPanel() {
             answer?: string;
             displayName?: string;
             error?: string;
+            model?: string;
             remaining?: number;
             type?: string;
           };
@@ -164,7 +170,14 @@ export function ChatPanel() {
             if (data.displayName) {
               setStatus((current) =>
                 current
-                  ? { ...current, displayName: data.displayName! }
+                  ? {
+                      ...current,
+                      displayName: data.displayName!,
+                      model:
+                        typeof data.model === 'string'
+                          ? data.model
+                          : current.model,
+                    }
                   : current,
               );
             }
@@ -226,7 +239,10 @@ export function ChatPanel() {
         Hi {name}. Ask about Igor&apos;s platform engineering work.
       </p>
       {status ? (
-        <p className="mt-2 text-sm text-cyan-200">Using {status.displayName}</p>
+        <p className="mt-2 text-sm text-cyan-200">
+          Using {status.displayName}
+          {status.model ? ` · ${status.model}` : ''}
+        </p>
       ) : null}
       <div className="mt-4" aria-labelledby="example-questions-heading">
         <p
