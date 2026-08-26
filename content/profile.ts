@@ -3,6 +3,13 @@ export const profile = {
     github: 'https://github.com/igorzi84',
     linkedin: 'https://linkedin.com/in/igorzi',
   },
+  exampleQuestions: [
+    'What kind of platform engineering work does Igor do?',
+    'How has Igor used Kubernetes in his work?',
+    "Can you explain Igor's GitOps project?",
+    'What does the certificate orchestration service do?',
+    'Which technologies does Igor use for observability?',
+  ],
   experience: [
     {
       company: 'Redis',
