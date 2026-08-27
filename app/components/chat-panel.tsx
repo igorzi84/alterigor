@@ -87,6 +87,12 @@ export function ChatPanel() {
     setError('');
     setIsSending(true);
     try {
+      void fetch('/api/v1/chat-notification', {
+        body: JSON.stringify({ name, question }),
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        method: 'POST',
+      }).catch(() => undefined);
       const fingerprint = await questionFingerprint(question);
       const cachedAnswer = getCachedAnswer(
         sessionStorage,
@@ -198,24 +204,32 @@ export function ChatPanel() {
 
   if (!name) {
     return (
-      <form className="mt-8 flex gap-3" onSubmit={startChat}>
+      <form className="mt-8 space-y-3" onSubmit={startChat}>
         <label className="sr-only" htmlFor="visitor-name">
           Your first name
         </label>
-        <input
-          className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2"
-          id="visitor-name"
-          maxLength={80}
-          onChange={(event) => setDraftName(event.target.value)}
-          placeholder="Your first name"
-          value={draftName}
-        />
-        <button
-          className="rounded-lg bg-cyan-300 px-4 py-2 font-semibold text-slate-950"
-          type="submit"
-        >
-          Start chat
-        </button>
+        <div className="flex gap-3">
+          <input
+            className="min-w-0 flex-1 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2"
+            id="visitor-name"
+            maxLength={80}
+            onChange={(event) => setDraftName(event.target.value)}
+            placeholder="Your first name"
+            value={draftName}
+          />
+          <button
+            className="rounded-lg bg-cyan-300 px-4 py-2 font-semibold text-slate-950"
+            type="submit"
+          >
+            Start chat
+          </button>
+        </div>
+        <p className="text-xs leading-5 text-slate-300">
+          By starting chat, you agree that your entered name and each question
+          you submit will be sent to Igor through private Telegram
+          notifications. Telegram may retain this information; it is not stored
+          by this site.
+        </p>
       </form>
     );
   }
@@ -303,7 +317,8 @@ export function ChatPanel() {
         </p>
       ) : null}
       <p className="mt-3 text-xs text-slate-400">
-        Your name and this conversation stay in this browser session.
+        Your name stays in this browser session. Submitted questions are sent to
+        Igor through Telegram and are not stored by this site.
       </p>
     </div>
   );

@@ -1,5 +1,23 @@
 # Architecture decisions
 
+## 2026-08-27 — Named Telegram chat alerts with clear disclosure
+
+**Decision:** State at chat start that using chat sends the entered name and
+each submitted chat question to Igor in a Telegram alert. The site does not
+store this content in D1 or application logs.
+
+**Rationale:** Igor wants to know when a visitor actively uses the assistant.
+A short, visible disclosure makes the external transfer clear before chat
+begins rather than hiding it behind ordinary usage.
+
+**Privacy and failure behavior:** Telegram is an external service and may
+retain the alert. The notice says this plainly. The request is bounded by the
+existing HMAC-based network quota and notification failures do not affect chat.
+
+**Non-goals:** Identity verification, visitor profiles, analytics containing
+names or questions, forwarding model answers, or sending content without the
+the visible chat disclosure.
+
 ## 2026-08-26 — Curate public chat knowledge separately from repository analysis
 
 **Decision:** Load only a short, version-controlled module of reviewed public

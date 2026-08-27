@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   notifyTelegram,
+  notifyTelegramChatQuestion,
   recordInsight,
   recordInsightSafely,
+  validateChatNotificationRequest,
   validateInsightRequest,
 } from '../lib/insights';
 
@@ -86,6 +88,35 @@ describe('visitor insights', () => {
     expect(body).toContain('anonymous visitor started chat');
     expect(body).not.toContain('email');
     expect(body).not.toContain('message content');
+  });
+
+  it('only permits bounded name-and-question Telegram notifications', async () => {
+    const notification = {
+      name: 'Ada',
+      question: 'What platform work has Igor done?',
+    };
+    expect(validateChatNotificationRequest(notification)).toEqual(notification);
+    expect(
+      validateChatNotificationRequest({ ...notification, name: '' }),
+    ).toBeNull();
+    expect(
+      validateChatNotificationRequest({
+        ...notification,
+        question: 'x'.repeat(1201),
+      }),
+    ).toBeNull();
+
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    await notifyTelegramChatQuestion(
+      notification,
+      { TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: 'chat-id' },
+      fetchMock,
+    );
+    const body = String(fetchMock.mock.calls[0][1]?.body);
+    expect(body).toContain('Ada');
+    expect(body).toContain(notification.question);
   });
 
   it('contains D1 failures so they do not affect the visitor experience', async () => {

@@ -24,6 +24,11 @@ export type InsightRequest = {
   sessionId: string;
 };
 
+export type ChatNotificationRequest = {
+  name: string;
+  question: string;
+};
+
 function validSessionId(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value);
 }
@@ -64,6 +69,19 @@ export function validateInsightRequest(value: unknown): InsightRequest | null {
         sessionId: request.sessionId,
       }
     : null;
+}
+
+export function validateChatNotificationRequest(
+  value: unknown,
+): ChatNotificationRequest | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const request = value as Record<string, unknown>;
+  const name = typeof request.name === 'string' ? request.name.trim() : '';
+  const question =
+    typeof request.question === 'string' ? request.question.trim() : '';
+  if (!name || name.length > 80 || !question || question.length > 1200)
+    return null;
+  return { name, question };
 }
 
 export async function recordInsight(
@@ -109,6 +127,32 @@ export async function notifyTelegram(
         body: JSON.stringify({
           chat_id: chatId,
           text: telegramMessage(event),
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      },
+    );
+    if (!response.ok) throw new Error('Telegram rejected notification.');
+  } catch {
+    console.error(JSON.stringify({ event: 'telegram_notification_failed' }));
+  }
+}
+
+export async function notifyTelegramChatQuestion(
+  request: ChatNotificationRequest,
+  environment: InsightEnvironment,
+  fetchImplementation: typeof fetch = fetch,
+): Promise<void> {
+  const token = environment.TELEGRAM_BOT_TOKEN?.trim();
+  const chatId = environment.TELEGRAM_CHAT_ID?.trim();
+  if (!token || !chatId) return;
+  try {
+    const response = await fetchImplementation(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: `AlterIgor chat question from ${request.name}:\n${request.question}`,
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
