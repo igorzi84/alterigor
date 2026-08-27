@@ -186,6 +186,19 @@ do not auto-submit or change the quota, and remain keyboard accessible. Prompt
 tests prove the requested tone is present while unsupported and safety-boundary
 answers remain explicit and factual.
 
+## PR 10 — Named chat-question notifications with clear disclosure
+
+- State at chat start that using chat sends the visitor's entered name and each
+  submitted question to Igor through Telegram. Make clear that Telegram may
+  retain this content and that it is not stored by the site.
+- Do not add the name or question to D1, analytics records, logs, visitor
+  profiles, or the chat prompt. Apply the existing short-lived HMAC-based
+  network quota before sending a notification.
+
+**Acceptance:** Tests prove bounded notification validation, disclosure-backed
+client behavior, content-free analytics storage, and failure isolation from
+chat.
+
 ## Configuration decisions
 
 - The LLM provider is configured through an OpenAI-compatible interface so a
