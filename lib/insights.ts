@@ -30,6 +30,7 @@ export type ChatNotificationRequest = {
 };
 
 type TelegramLocation = {
+  browser?: string;
   country?: string;
 };
 
@@ -38,6 +39,16 @@ export function getRequestCountry(request: Request): string | undefined {
   return typeof cfCountry === 'string'
     ? cfCountry
     : (request.headers.get('CF-IPCountry') ?? undefined);
+}
+
+export function getRequestBrowser(request: Request): string | undefined {
+  const userAgent = request.headers.get('User-Agent') ?? '';
+  if (/Edg\//.test(userAgent)) return 'Edge';
+  if (/OPR\//.test(userAgent)) return 'Opera';
+  if (/Chrome\//.test(userAgent)) return 'Chrome';
+  if (/Firefox\//.test(userAgent)) return 'Firefox';
+  if (/Safari\//.test(userAgent)) return 'Safari';
+  return undefined;
 }
 
 function validSessionId(value: unknown): value is string {
@@ -190,8 +201,12 @@ function telegramMessage(
       'AlterIgor: an anonymous visitor submitted the contact form.',
   };
   const country = countryLabel(location.country);
-  return country
-    ? `${messages[event]} Approximate country: ${country}.`
+  const details = [
+    country ? `Approximate country: ${country}.` : null,
+    location.browser ? `Browser: ${location.browser}.` : null,
+  ].filter((value): value is string => value !== null);
+  return details.length
+    ? `${messages[event]} ${details.join(' ')}`
     : messages[event];
 }
 

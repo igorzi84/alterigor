@@ -1,4 +1,5 @@
 import {
+  getRequestBrowser,
   getRequestCountry,
   recordInsightSafely,
   validateInsightRequest,
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
       (await consumeInsightQuota(env.DB, networkAddress, env.QUOTA_HMAC_SECRET))
     ) {
       await recordInsightSafely(insight, env, {
+        browser: getRequestBrowser(request),
         country,
       });
     }

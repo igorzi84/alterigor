@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  getRequestBrowser,
   getRequestCountry,
   notifyTelegram,
   notifyTelegramChatQuestion,
@@ -42,6 +43,22 @@ describe('visitor insights', () => {
         }),
       ),
     ).toBe('CA');
+  });
+
+  it('reduces the user agent to a coarse browser family', () => {
+    expect(
+      getRequestBrowser(
+        new Request('https://example.test', {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 Chrome/140.0.0.0 Safari/537.36',
+          },
+        }),
+      ),
+    ).toBe('Chrome');
+    expect(
+      getRequestBrowser(new Request('https://example.test')),
+    ).toBeUndefined();
   });
 
   it('accepts an essential first-visit alert and only consented optional events', () => {
@@ -93,12 +110,13 @@ describe('visitor insights', () => {
         TELEGRAM_BOT_TOKEN: 'bot-token',
         TELEGRAM_CHAT_ID: 'chat-id',
       },
-      { country: 'CA' },
+      { browser: 'Chrome', country: 'CA' },
       fetchMock,
     );
     const body = String(fetchMock.mock.calls[0][1]?.body);
     expect(body).toContain('anonymous visitor started chat');
     expect(body).toContain('Approximate country: Canada');
+    expect(body).toContain('Browser: Chrome');
     expect(body).not.toContain('email');
     expect(body).not.toContain('message content');
   });

@@ -2,21 +2,24 @@
 
 ## 2026-08-30 — Approximate country in Telegram visitor alerts
 
-**Decision:** Include the hosting platform's approximate country in generic
-Telegram visitor alerts when it is available. Do not store it, use a region,
-city, postal code, coordinates, or raw IP address.
+**Decision:** Include the hosting platform's approximate country and a coarse
+browser family in generic Telegram visitor alerts when available. Do not store
+either value, use a region, city, postal code, coordinates, raw IP address,
+browser version, operating system, or raw user-agent.
 
 **Rationale:** Country provides a small, useful indication of where portfolio
-interest originates without creating a visitor profile. It is less precise than
-a province or city and is clearly disclosed in the optional-metrics notice.
+interest originates without creating a visitor profile. The coarse browser
+label helps distinguish general compatibility signals without becoming a
+fingerprint. Both are clearly disclosed in the optional-metrics notice.
 
 **Privacy and failure behavior:** The value is derived server-side and sent
 only to Telegram. It may be absent or inaccurate because VPNs, mobile
 networks, corporate proxies, and Tor can obscure location. Missing or invalid
 values leave the alert location-free.
 
-**Non-goals:** Location analytics, country storage, regional reporting,
-identity verification, or tracking a visitor across sessions or sites.
+**Non-goals:** Location analytics, country or browser storage, regional
+reporting, identity verification, or tracking a visitor across sessions or
+sites.
 
 ## 2026-08-27 — Named Telegram chat alerts with clear disclosure
 

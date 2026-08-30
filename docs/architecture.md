@@ -49,7 +49,9 @@ Event records are deleted after 30 days.
 
 Telegram receives a first-visit alert for every browser session. When the
 hosting platform provides it, the alert includes an approximate country derived
-from the connection; it is sent to Telegram only and is never stored in D1.
+from the connection and a coarse browser family; both are sent to Telegram
+only and are never stored in D1. Browser versions, operating systems, and raw
+user-agent values are not retained or forwarded.
 When a visitor opts in, it also receives similar chat, link-click, and
 contact-activity alerts. It never receives a visitor name, email address,
 message, chat content, IP address, or session identifier. Resend, D1, and
