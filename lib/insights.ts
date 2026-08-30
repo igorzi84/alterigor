@@ -33,6 +33,13 @@ type TelegramLocation = {
   country?: string;
 };
 
+export function getRequestCountry(request: Request): string | undefined {
+  const cfCountry = request.cf?.country;
+  return typeof cfCountry === 'string'
+    ? cfCountry
+    : (request.headers.get('CF-IPCountry') ?? undefined);
+}
+
 function validSessionId(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value);
 }

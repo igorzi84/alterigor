@@ -1,4 +1,8 @@
-import { recordInsightSafely, validateInsightRequest } from '@/lib/insights';
+import {
+  getRequestCountry,
+  recordInsightSafely,
+  validateInsightRequest,
+} from '@/lib/insights';
 import { getEnvironment, getNetworkAddress } from '@/lib/env';
 import { consumeInsightQuota } from '@/lib/quota';
 
@@ -15,8 +19,7 @@ export async function POST(request: Request) {
   }
   const env = await getEnvironment();
   const networkAddress = getNetworkAddress(request);
-  const country =
-    typeof request.cf?.country === 'string' ? request.cf.country : undefined;
+  const country = getRequestCountry(request);
   try {
     if (
       networkAddress &&

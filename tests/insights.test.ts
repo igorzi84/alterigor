@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  getRequestCountry,
   notifyTelegram,
   notifyTelegramChatQuestion,
   recordInsight,
@@ -33,6 +34,16 @@ function fakeDatabase() {
 }
 
 describe('visitor insights', () => {
+  it('uses the platform country header when request.cf is unavailable', () => {
+    expect(
+      getRequestCountry(
+        new Request('https://example.test', {
+          headers: { 'CF-IPCountry': 'CA' },
+        }),
+      ),
+    ).toBe('CA');
+  });
+
   it('accepts an essential first-visit alert and only consented optional events', () => {
     expect(validateInsightRequest(request)).toEqual(request);
     expect(
