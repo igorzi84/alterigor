@@ -88,12 +88,12 @@ export function InsightsProvider({ children }: { children: ReactNode }) {
             Optional anonymous metrics
           </p>
           <p className="mt-1 leading-6 text-slate-300">
-            One anonymous browser-session visit sends a generic alert to Igor.
-            Allow optional interaction metrics to send anonymous alerts for chat
-            starts, GitHub or LinkedIn clicks, and contact activity. These
-            anonymous metrics never collect your name, chat, message, email, IP
-            address, or browsing profile; hashed event records are deleted after
-            30 days.
+            One anonymous browser-session visit sends an alert to Igor with an
+            approximate country based on your connection. Allow optional
+            interaction metrics to send similar alerts for chat starts, GitHub
+            or LinkedIn clicks, and contact activity. These anonymous metrics
+            never collect your name, chat, message, email, IP address, or
+            browsing profile; hashed event records are deleted after 30 days.
           </p>
           <div className="mt-3 flex gap-3">
             <button

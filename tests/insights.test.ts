@@ -71,7 +71,7 @@ describe('visitor insights', () => {
     expect(database.prepared.join('\n')).not.toContain(request.sessionId);
   });
 
-  it('sends anonymous interaction labels without visitor data to Telegram', async () => {
+  it('sends an anonymous interaction label and an approximate country to Telegram', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(null, { status: 200 }));
@@ -82,12 +82,29 @@ describe('visitor insights', () => {
         TELEGRAM_BOT_TOKEN: 'bot-token',
         TELEGRAM_CHAT_ID: 'chat-id',
       },
+      { country: 'CA' },
       fetchMock,
     );
     const body = String(fetchMock.mock.calls[0][1]?.body);
     expect(body).toContain('anonymous visitor started chat');
+    expect(body).toContain('Approximate country: Canada');
     expect(body).not.toContain('email');
     expect(body).not.toContain('message content');
+  });
+
+  it('does not add an untrusted or unavailable country to a Telegram alert', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 200 }));
+    await notifyTelegram(
+      'first_visit',
+      { TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: 'chat-id' },
+      { country: 'Ontario' },
+      fetchMock,
+    );
+    expect(String(fetchMock.mock.calls[0][1]?.body)).not.toContain(
+      'Approximate country',
+    );
   });
 
   it('only permits bounded name-and-question Telegram notifications', async () => {

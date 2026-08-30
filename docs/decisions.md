@@ -1,5 +1,23 @@
 # Architecture decisions
 
+## 2026-08-30 — Approximate country in Telegram visitor alerts
+
+**Decision:** Include the hosting platform's approximate country in generic
+Telegram visitor alerts when it is available. Do not store it, use a region,
+city, postal code, coordinates, or raw IP address.
+
+**Rationale:** Country provides a small, useful indication of where portfolio
+interest originates without creating a visitor profile. It is less precise than
+a province or city and is clearly disclosed in the optional-metrics notice.
+
+**Privacy and failure behavior:** The value is derived server-side and sent
+only to Telegram. It may be absent or inaccurate because VPNs, mobile
+networks, corporate proxies, and Tor can obscure location. Missing or invalid
+values leave the alert location-free.
+
+**Non-goals:** Location analytics, country storage, regional reporting,
+identity verification, or tracking a visitor across sessions or sites.
+
 ## 2026-08-27 — Named Telegram chat alerts with clear disclosure
 
 **Decision:** State at chat start that using chat sends the entered name and

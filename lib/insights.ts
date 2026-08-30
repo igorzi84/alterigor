@@ -29,6 +29,10 @@ export type ChatNotificationRequest = {
   question: string;
 };
 
+type TelegramLocation = {
+  country?: string;
+};
+
 function validSessionId(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value);
 }
@@ -115,6 +119,7 @@ export async function recordInsight(
 export async function notifyTelegram(
   event: InsightEvent,
   environment: InsightEnvironment,
+  location: TelegramLocation = {},
   fetchImplementation: typeof fetch = fetch,
 ): Promise<void> {
   const token = environment.TELEGRAM_BOT_TOKEN?.trim();
@@ -126,7 +131,7 @@ export async function notifyTelegram(
       {
         body: JSON.stringify({
           chat_id: chatId,
-          text: telegramMessage(event),
+          text: telegramMessage(event, location),
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -164,7 +169,10 @@ export async function notifyTelegramChatQuestion(
   }
 }
 
-function telegramMessage(event: InsightEvent): string {
+function telegramMessage(
+  event: InsightEvent,
+  location: TelegramLocation,
+): string {
   const messages: Record<InsightEvent, string> = {
     first_visit: 'AlterIgor: a new anonymous browser session visited the site.',
     chat_start: 'AlterIgor: an anonymous visitor started chat.',
@@ -174,19 +182,34 @@ function telegramMessage(event: InsightEvent): string {
     contact_submission:
       'AlterIgor: an anonymous visitor submitted the contact form.',
   };
-  return messages[event];
+  const country = countryLabel(location.country);
+  return country
+    ? `${messages[event]} Approximate country: ${country}.`
+    : messages[event];
+}
+
+function countryLabel(country: string | undefined): string | null {
+  if (!country || !/^[A-Z]{2}$/.test(country)) return null;
+  try {
+    return (
+      new Intl.DisplayNames(['en'], { type: 'region' }).of(country) ?? null
+    );
+  } catch {
+    return country;
+  }
 }
 
 export async function recordInsightSafely(
   request: InsightRequest,
   environment: InsightEnvironment,
+  location: TelegramLocation = {},
 ): Promise<void> {
   try {
     const inserted = await recordInsight(request, environment);
     if (inserted && (request.event === 'first_visit' || request.consent)) {
       // Cloudflare can finish the worker as soon as this request returns.
       // Await delivery so the notification is not abandoned with the request.
-      await notifyTelegram(request.event, environment);
+      await notifyTelegram(request.event, environment, location);
     }
   } catch {
     console.error(JSON.stringify({ event: 'visitor_insight_failed' }));

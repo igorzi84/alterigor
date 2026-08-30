@@ -47,11 +47,13 @@ UUID, hashed before D1 storage. A first-visit event is essential to the generic
 unique-visit alert; the other five allowlisted engagement events require opt-in.
 Event records are deleted after 30 days.
 
-Telegram receives a generic first-visit alert for every browser session. When a
-visitor opts in, it also receives generic chat, link-click, and contact-activity
-alerts. It never receives a visitor name, email address, message, chat content,
-or session identifier. Resend, D1, and Telegram failures are isolated from
-unrelated site functions.
+Telegram receives a first-visit alert for every browser session. When the
+hosting platform provides it, the alert includes an approximate country derived
+from the connection; it is sent to Telegram only and is never stored in D1.
+When a visitor opts in, it also receives similar chat, link-click, and
+contact-activity alerts. It never receives a visitor name, email address,
+message, chat content, IP address, or session identifier. Resend, D1, and
+Telegram failures are isolated from unrelated site functions.
 
 ## Non-goals
 

@@ -15,13 +15,17 @@ export async function POST(request: Request) {
   }
   const env = await getEnvironment();
   const networkAddress = getNetworkAddress(request);
+  const country =
+    typeof request.cf?.country === 'string' ? request.cf.country : undefined;
   try {
     if (
       networkAddress &&
       env.QUOTA_HMAC_SECRET &&
       (await consumeInsightQuota(env.DB, networkAddress, env.QUOTA_HMAC_SECRET))
     ) {
-      await recordInsightSafely(insight, env);
+      await recordInsightSafely(insight, env, {
+        country,
+      });
     }
   } catch {
     console.error(JSON.stringify({ event: 'visitor_insight_failed' }));
