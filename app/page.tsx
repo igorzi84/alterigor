@@ -3,6 +3,7 @@ import { site } from '@/lib/site';
 import { ChatPanel } from './components/chat-panel';
 import { ContactForm } from './components/contact-form';
 import { InsightsProvider } from './components/insights';
+import { LinkedInProfileBadge } from './components/linkedin-profile-badge';
 import { TrackedLink } from './components/tracked-link';
 
 const navigation = [
@@ -43,70 +44,74 @@ export default function Home() {
           className="relative mx-auto max-w-6xl px-6 pb-24 pt-16 sm:px-10 sm:pb-32 sm:pt-24"
           id="top"
         >
-          <p className="text-sm font-semibold tracking-[0.2em] text-cyan-300">
-            PLATFORM ENGINEERING
-          </p>
-          <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-[-0.04em] text-balance sm:text-7xl">
-            {profile.headline}
-          </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-            {profile.introduction}
-          </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              className="rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
-              href="#work"
-            >
-              Explore selected work
-            </a>
-            <a
-              className="rounded-full border border-cyan-300 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300 hover:text-slate-950"
-              href="#chat"
-            >
-              Talk to AlterIgor
-            </a>
-            <a
-              className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
-              href="#contact"
-            >
-              Contact Igor
-            </a>
-            <TrackedLink
-              className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
-              href={profile.contact.github}
-              event="github_click"
-              rel="noreferrer"
-              target="_blank"
-            >
-              View GitHub
-            </TrackedLink>
+          <div>
+            <div>
+              <p className="text-sm font-semibold tracking-[0.2em] text-cyan-300">
+                PLATFORM ENGINEERING
+              </p>
+              <h1 className="mt-6 max-w-4xl text-5xl font-semibold tracking-[-0.04em] text-balance sm:text-7xl">
+                {profile.headline}
+              </h1>
+              <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+                {profile.introduction}
+              </p>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <a
+                  className="rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200"
+                  href="#work"
+                >
+                  Explore selected work
+                </a>
+                <a
+                  className="rounded-full border border-cyan-300 px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300 hover:text-slate-950"
+                  href="#chat"
+                >
+                  Talk to AlterIgor
+                </a>
+                <a
+                  className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
+                  href="#contact"
+                >
+                  Contact Igor
+                </a>
+                <TrackedLink
+                  className="rounded-full border border-slate-600 px-5 py-3 text-sm font-semibold text-slate-100 transition hover:border-cyan-200 hover:text-cyan-100"
+                  href={profile.contact.github}
+                  event="github_click"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  View GitHub
+                </TrackedLink>
+              </div>
+              <dl className="mt-20 grid max-w-3xl gap-6 border-t border-slate-700 pt-7 sm:grid-cols-3">
+                <div>
+                  <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
+                    FOCUS
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-slate-200">
+                    Cloud platforms and reliable services
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
+                    TOOLKIT
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-slate-200">
+                    Kubernetes, GitOps, Python, observability
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
+                    APPROACH
+                  </dt>
+                  <dd className="mt-2 text-sm leading-6 text-slate-200">
+                    Operationally grounded engineering
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </div>
-          <dl className="mt-20 grid max-w-3xl gap-6 border-t border-slate-700 pt-7 sm:grid-cols-3">
-            <div>
-              <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
-                FOCUS
-              </dt>
-              <dd className="mt-2 text-sm leading-6 text-slate-200">
-                Cloud platforms and reliable services
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
-                TOOLKIT
-              </dt>
-              <dd className="mt-2 text-sm leading-6 text-slate-200">
-                Kubernetes, GitOps, Python, observability
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-semibold tracking-[0.14em] text-slate-400">
-                APPROACH
-              </dt>
-              <dd className="mt-2 text-sm leading-6 text-slate-200">
-                Operationally grounded engineering
-              </dd>
-            </div>
-          </dl>
         </section>
 
         <section
@@ -238,14 +243,19 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-3xl px-6 py-20 sm:px-10" id="contact">
+        <section className="mx-auto max-w-5xl px-6 py-20 sm:px-10" id="contact">
           <p className="text-sm font-semibold tracking-[0.18em] text-cyan-300">
             CONTACT
           </p>
           <h2 className="mt-5 text-3xl font-semibold sm:text-5xl">
             Start a conversation.
           </h2>
-          <ContactForm />
+          <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-start">
+            <ContactForm className="mt-0" />
+            <aside className="mx-auto w-full max-w-[310px] lg:mx-0 lg:justify-self-end">
+              <LinkedInProfileBadge className="mt-0" />
+            </aside>
+          </div>
         </section>
 
         <footer className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-10">
@@ -254,6 +264,7 @@ export default function Home() {
           </p>
           <div className="flex gap-5">
             <TrackedLink
+              aria-label="Connect with Igor Zilberman on LinkedIn"
               className="transition hover:text-cyan-200"
               href={profile.contact.linkedin}
               event="linkedin_click"

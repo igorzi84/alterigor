@@ -1,7 +1,7 @@
 'use client';
 import { FormEvent, useState } from 'react';
 import { useInsights } from './insights';
-export function ContactForm() {
+export function ContactForm({ className = 'mt-8' }: { className?: string }) {
   const { track } = useInsights();
   const [status, setStatus] = useState('');
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -35,7 +35,7 @@ export function ContactForm() {
   }
   return (
     <form
-      className="mt-8 grid gap-3"
+      className={`${className} grid gap-3`}
       onFocus={() => track('contact_start')}
       onSubmit={submit}
     >

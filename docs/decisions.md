@@ -1,5 +1,24 @@
 # Architecture decisions
 
+## 2026-09-01 — Official LinkedIn profile badge
+
+**Decision:** Use LinkedIn's official dark vertical profile badge on the right
+side of the contact form at desktop widths, centered below it on small screens,
+and retain the plain LinkedIn footer link.
+
+**Rationale:** It provides the profile presentation selected by Igor. The badge
+script loads only in the browser, is loaded once, and its fallback link works
+without JavaScript. The page clearly discloses that LinkedIn may receive
+browser information when the badge loads.
+
+**Privacy and failure behavior:** This adds a third-party request to LinkedIn
+on portfolio visits. The site's own LinkedIn-click event remains
+consent-controlled. If the badge script fails or is blocked, the profile link
+remains usable.
+
+**Non-goals:** LinkedIn login, social feeds, identity tracking by this site,
+or new visitor data collection.
+
 ## 2026-08-30 — Approximate country in Telegram visitor alerts
 
 **Decision:** Include the hosting platform's approximate country and a coarse
