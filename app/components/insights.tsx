@@ -32,10 +32,10 @@ function storedConsent(): 'accepted' | 'declined' | null {
 }
 
 function sessionId(): string {
-  const existing = sessionStorage.getItem(sessionKey);
+  const existing = localStorage.getItem(sessionKey);
   if (existing) return existing;
   const value = crypto.randomUUID();
-  sessionStorage.setItem(sessionKey, value);
+  localStorage.setItem(sessionKey, value);
   return value;
 }
 
