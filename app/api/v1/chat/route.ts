@@ -186,6 +186,7 @@ export function createChatHandlers(overrides: Partial<ChatDependencies> = {}) {
                 event('status', { displayName, type: 'fallback' }),
               );
             },
+            remaining,
           );
           controller.enqueue(
             event('answer', {

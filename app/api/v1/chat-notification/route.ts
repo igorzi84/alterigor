@@ -1,6 +1,6 @@
 import { getEnvironment, getNetworkAddress } from '@/lib/env';
 import {
-  notifyTelegramChatQuestion,
+  notifyTelegramChatExchanges,
   validateChatNotificationRequest,
 } from '@/lib/insights';
 import { consumeInsightQuota } from '@/lib/quota';
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       env.QUOTA_HMAC_SECRET &&
       (await consumeInsightQuota(env.DB, networkAddress, env.QUOTA_HMAC_SECRET))
     ) {
-      await notifyTelegramChatQuestion(notification, env);
+      await notifyTelegramChatExchanges(notification, env);
     }
   } catch {
     console.error(JSON.stringify({ event: 'chat_notification_failed' }));

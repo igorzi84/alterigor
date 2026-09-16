@@ -157,10 +157,17 @@ function publicKnowledge(): string {
   ].join('\n');
 }
 
-function systemPrompt(extendedProfile?: string): string {
+function systemPrompt(extendedProfile?: string, remaining?: number): string {
   const publicOnRequest = extendedProfile
     ? `\nPublic-on-request facts, approved by Igor:\n${extendedProfile}\n`
     : '';
+
+  const quotaGuidance =
+    remaining === 0
+      ? "\nThe visitor has no questions left in this chat session after this answer. Do not invite, encourage, or ask them to submit another chat question. If a next step helps, direct them to Igor's contact path instead.\n"
+      : typeof remaining === 'number'
+        ? `\nThe visitor has ${remaining} question${remaining === 1 ? '' : 's'} left in this chat session after this answer. Do not imply they have more than that.\n`
+        : '';
 
   return `You are AlterIgor, an AI portfolio assistant for ${profile.name}.
 Answer only from the approved knowledge below. Do not invent, infer, or
@@ -178,7 +185,7 @@ unavailable states, be direct, calm, and non-jokey.
 
 Approved public professional knowledge:
 ${publicKnowledge()}
-${publicOnRequest}`;
+${publicOnRequest}${quotaGuidance}`;
 }
 
 export async function answerQuestion(
@@ -186,6 +193,7 @@ export async function answerQuestion(
   environment: ProviderEnvironment = process.env as ProviderEnvironment,
   fetchImplementation: typeof fetch = fetch,
   onFallback?: (displayName: string) => void | Promise<void>,
+  remaining?: number,
 ): Promise<AssistantAnswer> {
   const settings = getProviderSettings(environment);
   const providers = settings.providers;
@@ -200,7 +208,7 @@ export async function answerQuestion(
           body: JSON.stringify({
             messages: [
               {
-                content: systemPrompt(settings.extendedProfile),
+                content: systemPrompt(settings.extendedProfile, remaining),
                 role: 'system',
               },
               { content: message, role: 'user' },

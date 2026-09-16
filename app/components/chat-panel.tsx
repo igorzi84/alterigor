@@ -1,11 +1,19 @@
 'use client';
 
-import { FormEvent, useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   cacheAnswer,
   getCachedAnswer,
   questionFingerprint,
 } from '@/lib/chat-cache';
+import { CHAT_NOTIFICATION_IDLE_MS } from '@/lib/chat-notification';
 import { profile } from '@/content/profile';
 import { useInsights } from './insights';
 
@@ -17,6 +25,7 @@ const unavailableMessage =
 const subscribeToSessionStorage = () => () => {};
 
 type Message = { role: 'assistant' | 'user'; content: string };
+type ChatExchange = { answer: string; question: string };
 type ChatStatus = {
   displayName: string;
   limit: number;
@@ -51,6 +60,44 @@ export function ChatPanel() {
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState<ChatStatus | null>(null);
   const [providerStatus, setProviderStatus] = useState('');
+  const notificationQueue = useRef<ChatExchange[]>([]);
+  const notificationTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  const flushNotifications = useCallback(() => {
+    if (notificationTimer.current) clearTimeout(notificationTimer.current);
+    notificationTimer.current = undefined;
+    const exchanges = notificationQueue.current.splice(0);
+    if (!name || !exchanges.length) return;
+    void fetch('/api/v1/chat-notification', {
+      body: JSON.stringify({ exchanges, name }),
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      method: 'POST',
+    }).catch(() => undefined);
+  }, [name]);
+
+  const queueNotification = useCallback(
+    (question: string, answer: string) => {
+      notificationQueue.current.push({ answer, question });
+      if (notificationTimer.current) clearTimeout(notificationTimer.current);
+      notificationTimer.current = setTimeout(
+        flushNotifications,
+        CHAT_NOTIFICATION_IDLE_MS,
+      );
+    },
+    [flushNotifications],
+  );
+
+  useEffect(() => {
+    const flushOnPageHide = () => flushNotifications();
+    window.addEventListener('pagehide', flushOnPageHide);
+    return () => {
+      window.removeEventListener('pagehide', flushOnPageHide);
+      flushNotifications();
+    };
+  }, [flushNotifications]);
 
   useEffect(() => {
     if (!name) return;
@@ -92,12 +139,6 @@ export function ChatPanel() {
     setError('');
     setIsSending(true);
     try {
-      void fetch('/api/v1/chat-notification', {
-        body: JSON.stringify({ name, question }),
-        headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
-        method: 'POST',
-      }).catch(() => undefined);
       const fingerprint = await questionFingerprint(question);
       const cachedAnswer = getCachedAnswer(
         sessionStorage,
@@ -111,6 +152,7 @@ export function ChatPanel() {
             { content: cachedAnswer, role: 'assistant' as const },
           ].slice(-6),
         );
+        queueNotification(question, cachedAnswer);
         return;
       }
       if (status) setProviderStatus(`Trying ${status.displayName}…`);
@@ -193,6 +235,7 @@ export function ChatPanel() {
               fingerprint,
               data.answer,
             );
+            queueNotification(question, data.answer);
             setMessages(
               [
                 ...nextMessages,
@@ -238,10 +281,11 @@ export function ChatPanel() {
           </button>
         </div>
         <p className="text-xs leading-5 text-slate-300">
-          By starting chat, you agree that your entered name and each question
-          you submit will be sent to Igor through private Telegram
-          notifications. Telegram may retain this information; it is not stored
-          by this site.
+          By starting chat, you agree that your entered name, submitted
+          questions, and AlterIgor&apos;s answers will be grouped and sent to
+          Igor through a private Telegram notification after 30 seconds without
+          a new question, or when you leave the page. Telegram may retain this
+          information; it is not stored by this site.
         </p>
       </form>
     );
@@ -258,26 +302,28 @@ export function ChatPanel() {
           {status.model ? ` · ${status.model}` : ''}
         </p>
       ) : null}
-      <div className="mt-4" aria-labelledby="example-questions-heading">
-        <p
-          className="text-sm font-medium text-slate-200"
-          id="example-questions-heading"
-        >
-          Try a question
-        </p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {profile.exampleQuestions.map((question) => (
-            <button
-              className="rounded-full border border-slate-600 px-3 py-1.5 text-left text-sm text-slate-200 transition hover:border-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
-              key={question}
-              onClick={() => setMessage(question)}
-              type="button"
-            >
-              {question}
-            </button>
-          ))}
+      {status?.remaining !== 0 ? (
+        <div className="mt-4" aria-labelledby="example-questions-heading">
+          <p
+            className="text-sm font-medium text-slate-200"
+            id="example-questions-heading"
+          >
+            Try a question
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {profile.exampleQuestions.map((question) => (
+              <button
+                className="rounded-full border border-slate-600 px-3 py-1.5 text-left text-sm text-slate-200 transition hover:border-cyan-200 hover:text-cyan-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-200"
+                key={question}
+                onClick={() => setMessage(question)}
+                type="button"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
       <div className="mt-4 space-y-3" aria-live="polite">
         {messages.map((item, index) => (
           <p
@@ -333,8 +379,10 @@ export function ChatPanel() {
         </p>
       ) : null}
       <p className="mt-3 text-xs text-slate-400">
-        Your name stays in this browser session. Submitted questions are sent to
-        Igor through Telegram and are not stored by this site.
+        Your name stays in this browser session. Submitted questions and
+        AlterIgor&apos;s answers are grouped for a Telegram alert after 30
+        seconds without a new question, or when you leave the page, and are not
+        stored by this site.
       </p>
     </div>
   );

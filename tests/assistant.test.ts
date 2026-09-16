@@ -78,6 +78,25 @@ describe('assistant provider', () => {
     );
   });
 
+  it('tells the assistant not to invite another question when the limit is exhausted', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'Final answer.' } }],
+        }),
+        { status: 200 },
+      ),
+    );
+
+    await answerQuestion('Hello', environment, fetchMock, undefined, 0);
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1]?.body as string) as {
+      messages: Array<{ content: string }>;
+    };
+    expect(body.messages[0].content).toContain('no questions left');
+    expect(body.messages[0].content).toContain('Do not invite');
+  });
+
   it('rejects missing provider configuration without exposing a secret', async () => {
     await expect(answerQuestion('Hello', {})).rejects.toBeInstanceOf(
       AssistantConfigurationError,
@@ -268,5 +287,46 @@ describe('chat endpoint', () => {
     expect(response.status).toBe(429);
     expect(consumeQuotaMock).toHaveBeenCalledOnce();
     expect(answerQuestionMock).not.toHaveBeenCalled();
+  });
+
+  it('passes the server-calculated exhausted quota to the assistant', async () => {
+    const answerQuestionMock = vi
+      .fn<typeof answerQuestion>()
+      .mockResolvedValue({ answer: 'Final answer.' });
+    const { POST: quotaAwarePost } = createChatHandlers({
+      answerQuestion: answerQuestionMock,
+      chatQuotaRemaining: vi.fn().mockResolvedValue(0),
+      consumeChatQuota: vi.fn().mockResolvedValue(true),
+      getEnvironment: async () =>
+        ({
+          DB: {} as D1Database,
+          LLM_PROVIDERS: JSON.stringify([
+            {
+              apiKeyEnv: 'TEST_PROVIDER_KEY',
+              baseUrl: 'https://provider.example/v1',
+              displayName: 'Test provider',
+              model: 'test-model',
+            },
+          ]),
+          QUOTA_HMAC_SECRET: 'test-secret',
+          TEST_PROVIDER_KEY: 'test-key',
+        }) as AppEnvironment,
+    });
+
+    const response = await quotaAwarePost(
+      new Request('https://alterigor.example/api/v1/chat', {
+        body: JSON.stringify({ message: 'Hello' }),
+        method: 'POST',
+      }),
+    );
+
+    await response.text();
+    expect(answerQuestionMock).toHaveBeenLastCalledWith(
+      'Hello',
+      expect.any(Object),
+      fetch,
+      expect.any(Function),
+      0,
+    );
   });
 });

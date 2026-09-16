@@ -1,5 +1,28 @@
 # Architecture decisions
 
+## 2026-09-16 — Batched chat-question Telegram alerts and quota-aware answers
+
+**Decision:** Group each completed visitor question-and-answer exchange in the
+browser and send Telegram alerts after 30 seconds without a new question, or
+when the visitor leaves the page. Split a long group into Telegram-safe parts.
+Pass the server-calculated remaining question count to the model with each
+request; at zero, instruct it not to invite another chat question and hide the
+example-question controls.
+
+**Rationale:** Per-question alerts are noisy during an active conversation.
+The server is the trusted source for the quota, so it can prevent a final model
+answer from suggesting an unavailable next action.
+
+**Privacy and failure behavior:** The temporary group, including model answers,
+exists only in browser memory and is never stored by the application, D1, or
+logs. Closing the browser abruptly can lose an unsent group. Telegram delivery
+remains optional to chat and failure does not affect answers or quota
+enforcement.
+
+**Non-goals:** Persistent chat transcripts, visitor profiles, delayed chat
+answers, extending the five-question limit, or using queued question content
+for analytics.
+
 ## 2026-09-16 — Visible dwell time before anonymous visit alerts
 
 **Decision:** Send the essential anonymous `first_visit` alert only after the

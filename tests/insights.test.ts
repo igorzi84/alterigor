@@ -4,7 +4,7 @@ import {
   getRequestBrowser,
   getRequestCountry,
   notifyTelegram,
-  notifyTelegramChatQuestion,
+  notifyTelegramChatExchanges,
   recordInsight,
   recordInsightSafely,
   validateChatNotificationRequest,
@@ -136,10 +136,19 @@ describe('visitor insights', () => {
     );
   });
 
-  it('only permits bounded name-and-question Telegram notifications', async () => {
+  it('only permits bounded grouped Telegram chat exchanges', async () => {
     const notification = {
       name: 'Ada',
-      question: 'What platform work has Igor done?',
+      exchanges: [
+        {
+          question: 'What platform work has Igor done?',
+          answer: 'He has built platform services.',
+        },
+        {
+          question: 'How does he use Temporal?',
+          answer: 'For durable certificate workflows.',
+        },
+      ],
     };
     expect(validateChatNotificationRequest(notification)).toEqual(notification);
     expect(
@@ -148,21 +157,33 @@ describe('visitor insights', () => {
     expect(
       validateChatNotificationRequest({
         ...notification,
-        question: 'x'.repeat(1201),
+        exchanges: [{ question: 'x'.repeat(1201), answer: 'Answer' }],
+      }),
+    ).toBeNull();
+    expect(
+      validateChatNotificationRequest({
+        ...notification,
+        exchanges: Array.from({ length: 6 }, () => ({
+          question: 'Question',
+          answer: 'Answer',
+        })),
       }),
     ).toBeNull();
 
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(null, { status: 200 }));
-    await notifyTelegramChatQuestion(
+    await notifyTelegramChatExchanges(
       notification,
       { TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: 'chat-id' },
       fetchMock,
     );
     const body = String(fetchMock.mock.calls[0][1]?.body);
     expect(body).toContain('Ada');
-    expect(body).toContain(notification.question);
+    expect(body).toContain(notification.exchanges[0].question);
+    expect(body).toContain(notification.exchanges[0].answer);
+    expect(body).toContain(notification.exchanges[1].question);
+    expect(body).toContain(notification.exchanges[1].answer);
   });
 
   it('contains D1 failures so they do not affect the visitor experience', async () => {

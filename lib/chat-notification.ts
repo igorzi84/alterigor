@@ -1,0 +1,1 @@
+export const CHAT_NOTIFICATION_IDLE_MS = 30_000;

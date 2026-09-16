@@ -25,7 +25,12 @@ export type InsightRequest = {
 };
 
 export type ChatNotificationRequest = {
+  exchanges: ChatExchange[];
   name: string;
+};
+
+export type ChatExchange = {
+  answer: string;
   question: string;
 };
 
@@ -99,11 +104,32 @@ export function validateChatNotificationRequest(
   if (typeof value !== 'object' || value === null) return null;
   const request = value as Record<string, unknown>;
   const name = typeof request.name === 'string' ? request.name.trim() : '';
-  const question =
-    typeof request.question === 'string' ? request.question.trim() : '';
-  if (!name || name.length > 80 || !question || question.length > 1200)
+  const exchanges = Array.isArray(request.exchanges)
+    ? request.exchanges.map((exchange) => {
+        const value =
+          typeof exchange === 'object' && exchange !== null
+            ? (exchange as Record<string, unknown>)
+            : {};
+        return {
+          answer: typeof value.answer === 'string' ? value.answer.trim() : '',
+          question:
+            typeof value.question === 'string' ? value.question.trim() : '',
+        };
+      })
+    : [];
+  if (
+    !name ||
+    name.length > 80 ||
+    exchanges.length < 1 ||
+    exchanges.length > 5 ||
+    exchanges.some(
+      ({ answer, question }) =>
+        !question || question.length > 1200 || !answer || answer.length > 1600,
+    )
+  ) {
     return null;
-  return { name, question };
+  }
+  return { exchanges, name };
 }
 
 export async function recordInsight(
@@ -161,7 +187,7 @@ export async function notifyTelegram(
   }
 }
 
-export async function notifyTelegramChatQuestion(
+export async function notifyTelegramChatExchanges(
   request: ChatNotificationRequest,
   environment: InsightEnvironment,
   fetchImplementation: typeof fetch = fetch,
@@ -170,21 +196,40 @@ export async function notifyTelegramChatQuestion(
   const chatId = environment.TELEGRAM_CHAT_ID?.trim();
   if (!token || !chatId) return;
   try {
-    const response = await fetchImplementation(
-      `https://api.telegram.org/bot${token}/sendMessage`,
-      {
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: `AlterIgor chat question from ${request.name}:\n${request.question}`,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      },
-    );
-    if (!response.ok) throw new Error('Telegram rejected notification.');
+    for (const text of telegramChatMessages(request)) {
+      const response = await fetchImplementation(
+        `https://api.telegram.org/bot${token}/sendMessage`,
+        {
+          body: JSON.stringify({ chat_id: chatId, text }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        },
+      );
+      if (!response.ok) throw new Error('Telegram rejected notification.');
+    }
   } catch {
     console.error(JSON.stringify({ event: 'telegram_notification_failed' }));
   }
+}
+
+function telegramChatMessages(request: ChatNotificationRequest): string[] {
+  const header = `AlterIgor chat from ${request.name}:`;
+  const exchanges = request.exchanges.map(
+    ({ answer, question }) => `Question: ${question}\nAnswer: ${answer}`,
+  );
+  const messages: string[] = [];
+  let message = header;
+  for (const exchange of exchanges) {
+    const next = `${message}\n\n${exchange}`;
+    if (next.length > 3900 && message !== header) {
+      messages.push(message);
+      message = `${header}\n\n${exchange}`;
+    } else {
+      message = next;
+    }
+  }
+  messages.push(message);
+  return messages;
 }
 
 function telegramMessage(
