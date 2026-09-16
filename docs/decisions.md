@@ -1,5 +1,25 @@
 # Architecture decisions
 
+## 2026-09-16 — Visible dwell time before anonymous visit alerts
+
+**Decision:** Send the essential anonymous `first_visit` alert only after the
+portfolio page has remained visible for five seconds. Cancel the pending alert
+when the document becomes hidden and restart the dwell period only if it later
+becomes visible.
+
+**Rationale:** Mobile and desktop browsers can restore, synchronize, preload,
+or briefly initialize background pages at startup. Those lifecycle events are
+not meaningful portfolio visits and should not generate Telegram alerts.
+
+**Privacy and failure behavior:** A page that never becomes visibly active
+sends no visit event and creates no related session identifier. The event
+remains anonymous, session-deduplicated, and independent of optional
+interaction-metrics consent once the visibility threshold is met.
+
+**Non-goals:** Proving visitor identity or intent, measuring dwell time,
+tracking background activity, or changing the consent rules for interaction
+metrics.
+
 ## 2026-09-01 — Official LinkedIn profile badge
 
 **Decision:** Use LinkedIn's official dark vertical profile badge on the right

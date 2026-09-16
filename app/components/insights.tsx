@@ -6,10 +6,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useSyncExternalStore,
 } from 'react';
 
 import type { InsightEvent } from '@/lib/insights';
+import { canSendFirstVisit, VISIBLE_VISIT_DWELL_MS } from '@/lib/visit-alert';
 
 const consentKey = 'alterigor-metrics-consent';
 const sessionKey = 'alterigor-metrics-session';
@@ -40,6 +42,7 @@ function sessionId(): string {
 }
 
 export function InsightsProvider({ children }: { children: ReactNode }) {
+  const firstVisitSent = useRef(false);
   const consent = useSyncExternalStore(
     subscribeToConsent,
     storedConsent,
@@ -71,7 +74,42 @@ export function InsightsProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    send('first_visit');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    function cancel() {
+      if (timer !== undefined) clearTimeout(timer);
+      timer = undefined;
+    }
+
+    function schedule() {
+      cancel();
+      if (
+        !canSendFirstVisit(document.visibilityState, firstVisitSent.current)
+      ) {
+        return;
+      }
+      timer = setTimeout(() => {
+        if (
+          !canSendFirstVisit(document.visibilityState, firstVisitSent.current)
+        ) {
+          return;
+        }
+        firstVisitSent.current = true;
+        send('first_visit');
+      }, VISIBLE_VISIT_DWELL_MS);
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') schedule();
+      else cancel();
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    schedule();
+    return () => {
+      cancel();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [send]);
 
   function decide(value: 'accepted' | 'declined') {
