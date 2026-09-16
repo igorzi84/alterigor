@@ -43,21 +43,19 @@ interaction-metrics consent once the visibility threshold is met.
 tracking background activity, or changing the consent rules for interaction
 metrics.
 
-## 2026-09-01 — Official LinkedIn profile badge
+## 2026-09-16 — Remove deprecated LinkedIn profile badge
 
-**Decision:** Use LinkedIn's official dark vertical profile badge on the right
-side of the contact form at desktop widths, centered below it on small screens,
-and retain the plain LinkedIn footer link.
+**Decision:** Remove LinkedIn's deprecated embedded profile badge and keep the
+plain LinkedIn footer link.
 
-**Rationale:** It provides the profile presentation selected by Igor. The badge
-script loads only in the browser, is loaded once, and its fallback link works
-without JavaScript. The page clearly discloses that LinkedIn may receive
-browser information when the badge loads.
+**Rationale:** The embed is no longer supported. The footer link preserves a
+direct, accessible path to Igor's public profile without third-party script
+loading.
 
-**Privacy and failure behavior:** This adds a third-party request to LinkedIn
-on portfolio visits. The site's own LinkedIn-click event remains
-consent-controlled. If the badge script fails or is blocked, the profile link
-remains usable.
+**Privacy and failure behavior:** Portfolio visits no longer load a LinkedIn
+script or send browser information to LinkedIn through the badge. The existing
+consent-controlled click measurement remains unchanged when visitors choose the
+footer link.
 
 **Non-goals:** LinkedIn login, social feeds, identity tracking by this site,
 or new visitor data collection.

@@ -3,7 +3,6 @@ import { site } from '@/lib/site';
 import { ChatPanel } from './components/chat-panel';
 import { ContactForm } from './components/contact-form';
 import { InsightsProvider } from './components/insights';
-import { LinkedInProfileBadge } from './components/linkedin-profile-badge';
 import { TrackedLink } from './components/tracked-link';
 
 const navigation = [
@@ -250,11 +249,8 @@ export default function Home() {
           <h2 className="mt-5 text-3xl font-semibold sm:text-5xl">
             Start a conversation.
           </h2>
-          <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_310px] lg:items-start">
+          <div className="mt-8">
             <ContactForm className="mt-0" />
-            <aside className="mx-auto w-full max-w-[310px] lg:mx-0 lg:justify-self-end">
-              <LinkedInProfileBadge className="mt-0" />
-            </aside>
           </div>
         </section>
 
