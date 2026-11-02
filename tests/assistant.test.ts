@@ -76,6 +76,16 @@ describe('assistant provider', () => {
     expect(requestBody.messages[0].content).toContain(
       'Additional approved professional context:',
     );
+    expect(requestBody.messages[0].content).toContain('PlanGate');
+    expect(requestBody.messages[0].content).toContain(
+      'local-first personal project',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'Policy blocks cannot be overridden by approval',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'PlanGate never applies infrastructure changes',
+    );
   });
 
   it('tells the assistant not to invite another question when the limit is exhausted', async () => {

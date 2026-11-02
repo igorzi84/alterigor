@@ -245,3 +245,26 @@ server-only.
 
 **Non-goals:** Listing provider configuration, revealing routing rules, or
 persisting model choices with visitor data.
+
+## 2026-11-02 — Show PlanGate as a personal project
+
+**Decision:** Add PlanGate to Selected Work with a public GitHub link and a
+suggested chat question. Use the shared project description as approved chat
+knowledge. The description is grounded in the public PlanGate README reviewed
+on this date at `https://github.com/igorzi84/plangate`.
+
+**Outcome:** Visitors can discover the project and understand its policy,
+human-approval, persistence, and advisory-AI boundaries. Four project cards use
+a two-column desktop layout.
+
+**Non-goals:** Hosting the Python stack, accepting visitor plans, or claiming
+production adoption, deployment execution, or measured business results.
+
+**Failure behavior and privacy:** This is static portfolio content. It remains
+visible when chat is unavailable. The external link makes no request until
+clicked; no new visitor data, analytics events, scripts, or backend services
+are introduced.
+
+**Verification:** Check the shared description reaches the assistant prompt,
+run formatting, lint, type checks, tests, and the production build, and inspect
+the project cards in preview.

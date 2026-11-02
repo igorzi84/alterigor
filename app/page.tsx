@@ -143,7 +143,7 @@ export default function Home() {
             <h2 className="mt-5 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
               Systems designed for clear operational outcomes.
             </h2>
-            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-slate-700 bg-slate-700 lg:grid-cols-3">
+            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-slate-700 bg-slate-700 lg:grid-cols-2">
               {profile.projects.map((project) => (
                 <article
                   className="flex flex-col bg-[#0b1728] p-7"
@@ -168,6 +168,16 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
+                  {'href' in project && (
+                    <a
+                      className="mt-6 self-start rounded text-sm font-semibold text-cyan-200 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+                      href={project.href}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      View {project.name} on GitHub
+                    </a>
+                  )}
                 </article>
               ))}
             </div>

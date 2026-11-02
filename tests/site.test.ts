@@ -15,7 +15,11 @@ describe('site metadata', () => {
   });
 
   it('describes the Helm, Kustomize, and Argo CD deployment work accurately', () => {
-    expect(profile.projects[1]).toMatchObject({
+    expect(
+      profile.projects.find((project) =>
+        project.name.includes('Microservice Deployment'),
+      ),
+    ).toMatchObject({
       name: 'Microservice Deployment with Helm, Kustomize, and Argo CD',
       technologies: expect.arrayContaining(['Helm', 'Kustomize', 'Argo CD']),
     });
@@ -23,6 +27,7 @@ describe('site metadata', () => {
 
   it('keeps example questions grounded in the public portfolio profile', () => {
     expect(profile.exampleQuestions).toEqual([
+      'What is PlanGate and how does its approval gate work?',
       'What kind of platform engineering work does Igor do?',
       'How has Igor used Kubernetes in his work?',
       "Can you explain Igor's GitOps project?",

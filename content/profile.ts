@@ -4,6 +4,7 @@ export const profile = {
     linkedin: 'https://linkedin.com/in/igorzi',
   },
   exampleQuestions: [
+    'What is PlanGate and how does its approval gate work?',
     'What kind of platform engineering work does Igor do?',
     'How has Igor used Kubernetes in his work?',
     "Can you explain Igor's GitOps project?",
@@ -37,6 +38,19 @@ export const profile = {
     'Senior DevOps and Platform Engineer with 15+ years of experience building and operating cloud infrastructure, Kubernetes platforms, backend infrastructure services, CI/CD systems, and production automation.',
   name: 'Igor Zilberman',
   projects: [
+    {
+      description:
+        'A local-first personal project for reviewing Terraform and OpenTofu plans. Deterministic policies flag risky changes, Temporal coordinates human approval, and PostgreSQL stores reviews and audit records. AI explanations are optional and advisory. Policy blocks cannot be overridden by approval, and PlanGate never applies infrastructure changes.',
+      href: 'https://github.com/igorzi84/plangate',
+      name: 'PlanGate',
+      technologies: [
+        'Python',
+        'FastAPI',
+        'Temporal',
+        'PostgreSQL',
+        'Terraform / OpenTofu',
+      ],
+    },
     {
       description:
         'A Python/FastAPI service that automates TLS certificate lifecycle workflows, with durable orchestration, bounded concurrency, metrics, tracing, and operational alerts.',
