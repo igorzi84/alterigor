@@ -268,3 +268,28 @@ are introduced.
 **Verification:** Check the shared description reaches the assistant prompt,
 run formatting, lint, type checks, tests, and the production build, and inspect
 the project cards in preview.
+
+## 2026-11-02 — Public project links and merged contributions
+
+**Decision:** Rename the existing feed-monitoring entry to Hermes and link its
+public repository, preserving its description. Add an AlterIgor project entry
+and a separate list of three merged open-source contributions. Keep the two
+professional-work entries. Use the same approved contribution descriptions in
+the assistant context.
+
+**Sources:** Public Hermes and AlterIgor repositories, SchemaStore PR 6498,
+Sumo Logic OpenTelemetry Collector PR 967, and terraform-aws-backup PR 70,
+reviewed through GitHub on November 2, 2026. Describe the specific merged
+changes without implying ownership of those upstream projects.
+
+**Outcome and non-goals:** Give visitors inspectable code and contribution
+evidence. Do not duplicate Hermes, add the older utilities, change those
+repositories, or claim production adoption or unverified results.
+
+**Failure behavior and privacy:** Static project and contribution content
+remains available when chat is unavailable. External links load only when
+clicked. No new scripts, tracking events, visitor data, or services.
+
+**Verification:** Check Hermes appears once and approved context reaches chat;
+run formatting, lint, type checks, tests, and the production build; inspect the
+updated work section in browser preview.

@@ -146,7 +146,7 @@ export default function Home() {
             <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-slate-700 bg-slate-700 lg:grid-cols-2">
               {profile.projects.map((project) => (
                 <article
-                  className="flex flex-col bg-[#0b1728] p-7"
+                  className="flex flex-col bg-[#0b1728] p-7 last:lg:col-span-2"
                   key={project.name}
                 >
                   <h3 className="text-xl font-semibold text-slate-100">
@@ -180,6 +180,36 @@ export default function Home() {
                   )}
                 </article>
               ))}
+            </div>
+            <div className="mt-16" id="contributions">
+              <h3 className="text-2xl font-semibold tracking-tight text-slate-100">
+                Open-source contributions
+              </h3>
+              <p className="mt-3 text-slate-300">
+                Merged changes, with links to the original pull requests.
+              </p>
+              <ul className="mt-8 divide-y divide-slate-700 border-y border-slate-700">
+                {profile.contributions.map((contribution) => (
+                  <li className="py-6" key={contribution.href}>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-cyan-200">
+                      Merged · {contribution.merged}
+                    </p>
+                    <h4 className="mt-2 text-lg font-semibold">
+                      <a
+                        className="rounded text-slate-100 underline underline-offset-4 hover:text-cyan-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-200"
+                        href={contribution.href}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        {contribution.name}
+                      </a>
+                    </h4>
+                    <p className="mt-2 max-w-3xl leading-7 text-slate-300">
+                      {contribution.description}
+                    </p>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>

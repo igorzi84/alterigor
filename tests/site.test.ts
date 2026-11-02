@@ -39,4 +39,15 @@ describe('site metadata', () => {
   it('does not require a public deployment URL during local development', () => {
     expect(site.title).toContain('Platform Engineering Portfolio');
   });
+
+  it('links the existing feed-monitoring project to Hermes without duplicating it', () => {
+    const feedProjects = profile.projects.filter((project) =>
+      project.name.includes('Feed Monitoring'),
+    );
+    expect(feedProjects).toHaveLength(1);
+    expect(feedProjects[0]).toMatchObject({
+      name: 'Hermes — Platform Feed Monitoring Service',
+      href: 'https://github.com/igorzi84/Hermes',
+    });
+  });
 });

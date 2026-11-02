@@ -3,6 +3,29 @@ export const profile = {
     github: 'https://github.com/igorzi84',
     linkedin: 'https://linkedin.com/in/igorzi',
   },
+  contributions: [
+    {
+      name: 'SchemaStore — Prometheus configuration',
+      description:
+        'Added schema support for Prometheus TSDB retention configuration, with positive and negative validation fixtures.',
+      href: 'https://github.com/SchemaStore/schemastore/pull/6498',
+      merged: 'October 2026',
+    },
+    {
+      name: 'Sumo Logic OpenTelemetry Collector',
+      description:
+        'Fixed installation-token handling and a groupdel compatibility issue in the installer.',
+      href: 'https://github.com/SumoLogic/sumologic-otel-collector/pull/967',
+      merged: 'February 2023',
+    },
+    {
+      name: 'Terraform AWS Backup module',
+      description:
+        'Added an option to configure force-destroy behavior for an AWS Backup vault.',
+      href: 'https://github.com/lgallard/terraform-aws-backup/pull/70',
+      merged: 'February 2023',
+    },
+  ],
   exampleQuestions: [
     'What is PlanGate and how does its approval gate work?',
     'What kind of platform engineering work does Igor do?',
@@ -66,12 +89,25 @@ export const profile = {
     {
       description:
         'A Python service that monitors platform feeds, performs model-assisted analysis, and produces operational reports and notifications.',
-      name: 'Platform Feed Monitoring Service',
+      href: 'https://github.com/igorzi84/Hermes',
+      name: 'Hermes — Platform Feed Monitoring Service',
       technologies: [
         'Python',
         'Async I/O',
         'Model-assisted analysis',
         'Docker',
+      ],
+    },
+    {
+      description:
+        'The public portfolio and AI assistant you are using now. Built with TypeScript and OpenAI Sites, with server-side model integration, answers grounded in approved portfolio content, request quotas, a contact form, and automated tests. A personal project in AI-assisted application delivery.',
+      href: 'https://github.com/igorzi84/alterigor',
+      name: 'AlterIgor — About this site',
+      technologies: [
+        'TypeScript',
+        'React',
+        'Cloudflare Workers',
+        'OpenAI Sites',
       ],
     },
   ],

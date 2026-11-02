@@ -78,6 +78,15 @@ describe('assistant provider', () => {
     );
     expect(requestBody.messages[0].content).toContain('PlanGate');
     expect(requestBody.messages[0].content).toContain(
+      'Hermes — Platform Feed Monitoring Service',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'AlterIgor — About this site',
+    );
+    expect(requestBody.messages[0].content).toContain(
+      'SchemaStore — Prometheus configuration (merged October 2026)',
+    );
+    expect(requestBody.messages[0].content).toContain(
       'local-first personal project',
     );
     expect(requestBody.messages[0].content).toContain(

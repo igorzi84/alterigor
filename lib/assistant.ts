@@ -150,6 +150,11 @@ function publicKnowledge(): string {
     `Skills: ${profile.skills.join(', ')}`,
     'Selected projects:',
     projects,
+    'Merged open-source contributions:',
+    ...profile.contributions.map(
+      (contribution) =>
+        `- ${contribution.name} (merged ${contribution.merged}): ${contribution.description}`,
+    ),
     'Experience:',
     experience,
     'Additional approved professional context:',
